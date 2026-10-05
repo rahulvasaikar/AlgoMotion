@@ -83,7 +83,7 @@ const BUILTIN_SOLUTIONS: Record<string, any> = {
       difficulty: "Medium",
       timeComplexity: "O(n²)",
       spaceComplexity: "O(1)",
-      code: "def threeSum(nums):\n    nums.sort()\n    res = []\n    for i, a in enumerate(nums):\n        if i > 0 and a == nums[i-1]: continue\n        l, r = i + 1, len(nums) - 1\n        while l < r:\n            three = a + nums[l] + nums[r]\n            if three > 0: r -= 1\n            elif three < 0: l += 1\n            else:\n                res.append([a, nums[l], nums[r]])\n                l += 1; while nums[l] == nums[l-1] and l < r: l += 1\n    return res",
+      code: "def threeSum(nums):\n    nums.sort()\n    res = []\n    for i, a in enumerate(nums):\n        if i > 0 and a == nums[i-1]:\n            continue\n        l, r = i + 1, len(nums) - 1\n        while l < r:\n            three = a + nums[l] + nums[r]\n            if three > 0:\n                r -= 1\n            elif three < 0:\n                l += 1\n            else:\n                res.append([a, nums[l], nums[r]])\n                l += 1\n                while l < r and nums[l] == nums[l-1]:\n                    l += 1\n    return res",
     },
   },
   "maximum-subarray": {

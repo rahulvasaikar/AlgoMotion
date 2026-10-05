@@ -1,1048 +1,1310 @@
 {
   "templateType": "array-algorithm",
-  "title": "Best Time to Buy & Sell Stock",
-  "subtitle": "LeetCode #121 • Single-Pass Greedy Min Price",
-  "voiceoverText": "Here is how to solve Best Time to Buy and Sell Stock. We track the lowest buying price seen so far as we iterate through the days. On each day, we calculate the profit if we sell today. If that profit beats our maximum, we update it. This single pass solves the problem in linear O(N) time with constant space.",
+  "title": "Maximum Subarray",
+  "subtitle": "LeetCode #53 • Kadane's Algorithm",
+  "voiceoverText": "To find the contiguous subarray with the largest sum, we use Kadane's Algorithm. We maintain a running sum. If the running sum ever dips below zero, we reset it to zero because a negative prefix can never help us. We update our maximum sum at each step. This runs in optimal O(N) time.",
   "payload": {
     "array": [
-      7,
+      -2,
       1,
-      5,
-      3,
-      6,
+      -3,
+      4,
+      -1,
+      2,
+      1,
+      -5,
       4
     ],
-    "target": 5,
-    "algorithm": "best-time-to-buy-and-sell-stock",
-    "problemNumber": 121,
-    "difficulty": "Easy",
+    "target": 6,
+    "algorithm": "maximum-subarray",
+    "problemNumber": 53,
+    "difficulty": "Medium",
     "timeComplexity": "O(n)",
     "spaceComplexity": "O(1)",
-    "code": "def maxProfit(prices):\n    min_price = float('inf')\n    max_profit = 0\n    for p in prices:\n        min_price = min(min_price, p)\n        max_profit = max(max_profit, p - min_price)\n    return max_profit",
+    "code": "def maxSubArray(nums):\n    max_sum = nums[0]\n    cur_sum = 0\n    for n in nums:\n        cur_sum = max(cur_sum, 0) + n\n        max_sum = max(max_sum, cur_sum)\n    return max_sum",
     "trace": {
-      "function": "maxProfit",
-      "returnValue": 5,
-      "totalSteps": 22,
+      "function": "maxSubArray",
+      "returnValue": 6,
+      "totalSteps": 31,
       "steps": [
         {
           "stepIndex": 0,
           "line": 2,
-          "lineText": "min_price = float('inf')",
+          "lineText": "max_sum = nums[0]",
           "pointers": {},
           "scalars": {},
           "dataStructures": {
-            "prices": {
+            "nums": {
               "type": "array",
               "values": [
-                7,
+                -2,
                 1,
-                5,
-                3,
-                6,
+                -3,
+                4,
+                -1,
+                2,
+                1,
+                -5,
                 4
               ]
             }
           },
-          "actionText": "Compute / Update: min_price = float('inf')",
+          "actionText": "Compute / Update: max_sum = nums[0]",
           "statusText": "State Mutation"
         },
         {
           "stepIndex": 1,
           "line": 3,
-          "lineText": "max_profit = 0",
+          "lineText": "cur_sum = 0",
           "pointers": {},
           "scalars": {
-            "min_price": "Infinity"
+            "max_sum": -2
           },
           "dataStructures": {
-            "prices": {
+            "nums": {
               "type": "array",
               "values": [
-                7,
+                -2,
                 1,
-                5,
-                3,
-                6,
+                -3,
+                4,
+                -1,
+                2,
+                1,
+                -5,
                 4
               ]
             }
           },
-          "actionText": "Compute / Update: max_profit = 0",
+          "actionText": "Compute / Update: cur_sum = 0",
           "statusText": "State Mutation"
         },
         {
           "stepIndex": 2,
           "line": 4,
-          "lineText": "for p in prices:",
+          "lineText": "for n in nums:",
           "pointers": {},
           "scalars": {
-            "min_price": "Infinity",
-            "max_profit": 0
+            "max_sum": -2,
+            "cur_sum": 0
           },
           "dataStructures": {
-            "prices": {
+            "nums": {
               "type": "array",
               "values": [
-                7,
+                -2,
                 1,
-                5,
-                3,
-                6,
+                -3,
+                4,
+                -1,
+                2,
+                1,
+                -5,
                 4
               ]
             }
           },
-          "actionText": "for p in prices:",
+          "actionText": "for n in nums:",
           "statusText": "Advancing pointer"
         },
         {
           "stepIndex": 3,
           "line": 5,
-          "lineText": "min_price = min(min_price, p)",
-          "pointers": {
-            "p": 7
-          },
+          "lineText": "cur_sum = max(cur_sum, 0) + n",
+          "pointers": {},
           "scalars": {
-            "min_price": "Infinity",
-            "max_profit": 0
+            "max_sum": -2,
+            "cur_sum": 0,
+            "n": -2
           },
           "dataStructures": {
-            "prices": {
+            "nums": {
               "type": "array",
               "values": [
-                7,
+                -2,
                 1,
-                5,
-                3,
-                6,
+                -3,
+                4,
+                -1,
+                2,
+                1,
+                -5,
                 4
               ]
             }
           },
-          "actionText": "Compute / Update: min_price = min(min_price, p)",
+          "actionText": "Compute / Update: cur_sum = max(cur_sum, 0) + n",
           "statusText": "State Mutation"
         },
         {
           "stepIndex": 4,
           "line": 6,
-          "lineText": "max_profit = max(max_profit, p - min_price)",
-          "pointers": {
-            "p": 7
-          },
+          "lineText": "max_sum = max(max_sum, cur_sum)",
+          "pointers": {},
           "scalars": {
-            "min_price": 7,
-            "max_profit": 0
+            "max_sum": -2,
+            "cur_sum": -2,
+            "n": -2
           },
           "dataStructures": {
-            "prices": {
+            "nums": {
               "type": "array",
               "values": [
-                7,
+                -2,
                 1,
-                5,
-                3,
-                6,
+                -3,
+                4,
+                -1,
+                2,
+                1,
+                -5,
                 4
               ]
             }
           },
-          "actionText": "Compute / Update: max_profit = max(max_profit, p - min_price)",
+          "actionText": "Compute / Update: max_sum = max(max_sum, cur_sum)",
           "statusText": "State Mutation"
         },
         {
           "stepIndex": 5,
           "line": 4,
-          "lineText": "for p in prices:",
-          "pointers": {
-            "p": 7
-          },
+          "lineText": "for n in nums:",
+          "pointers": {},
           "scalars": {
-            "min_price": 7,
-            "max_profit": 0
+            "max_sum": -2,
+            "cur_sum": -2,
+            "n": -2
           },
           "dataStructures": {
-            "prices": {
+            "nums": {
               "type": "array",
               "values": [
-                7,
+                -2,
                 1,
-                5,
-                3,
-                6,
+                -3,
+                4,
+                -1,
+                2,
+                1,
+                -5,
                 4
               ]
             }
           },
-          "actionText": "Loop iteration (p = 7)",
+          "actionText": "for n in nums:",
           "statusText": "Advancing pointer"
         },
         {
           "stepIndex": 6,
           "line": 5,
-          "lineText": "min_price = min(min_price, p)",
-          "pointers": {
-            "p": 1
-          },
+          "lineText": "cur_sum = max(cur_sum, 0) + n",
+          "pointers": {},
           "scalars": {
-            "min_price": 7,
-            "max_profit": 0
+            "max_sum": -2,
+            "cur_sum": -2,
+            "n": 1
           },
           "dataStructures": {
-            "prices": {
+            "nums": {
               "type": "array",
               "values": [
-                7,
+                -2,
                 1,
-                5,
-                3,
-                6,
+                -3,
+                4,
+                -1,
+                2,
+                1,
+                -5,
                 4
               ]
             }
           },
-          "actionText": "Compute / Update: min_price = min(min_price, p)",
+          "actionText": "Compute / Update: cur_sum = max(cur_sum, 0) + n",
           "statusText": "State Mutation"
         },
         {
           "stepIndex": 7,
           "line": 6,
-          "lineText": "max_profit = max(max_profit, p - min_price)",
-          "pointers": {
-            "p": 1
-          },
+          "lineText": "max_sum = max(max_sum, cur_sum)",
+          "pointers": {},
           "scalars": {
-            "min_price": 1,
-            "max_profit": 0
+            "max_sum": -2,
+            "cur_sum": 1,
+            "n": 1
           },
           "dataStructures": {
-            "prices": {
+            "nums": {
               "type": "array",
               "values": [
-                7,
+                -2,
                 1,
-                5,
-                3,
-                6,
+                -3,
+                4,
+                -1,
+                2,
+                1,
+                -5,
                 4
               ]
             }
           },
-          "actionText": "Compute / Update: max_profit = max(max_profit, p - min_price)",
+          "actionText": "Compute / Update: max_sum = max(max_sum, cur_sum)",
           "statusText": "State Mutation"
         },
         {
           "stepIndex": 8,
           "line": 4,
-          "lineText": "for p in prices:",
-          "pointers": {
-            "p": 1
-          },
+          "lineText": "for n in nums:",
+          "pointers": {},
           "scalars": {
-            "min_price": 1,
-            "max_profit": 0
+            "max_sum": 1,
+            "cur_sum": 1,
+            "n": 1
           },
           "dataStructures": {
-            "prices": {
+            "nums": {
               "type": "array",
               "values": [
-                7,
+                -2,
                 1,
-                5,
-                3,
-                6,
+                -3,
+                4,
+                -1,
+                2,
+                1,
+                -5,
                 4
               ]
             }
           },
-          "actionText": "Loop iteration (p = 1)",
+          "actionText": "for n in nums:",
           "statusText": "Advancing pointer"
         },
         {
           "stepIndex": 9,
           "line": 5,
-          "lineText": "min_price = min(min_price, p)",
-          "pointers": {
-            "p": 5
-          },
+          "lineText": "cur_sum = max(cur_sum, 0) + n",
+          "pointers": {},
           "scalars": {
-            "min_price": 1,
-            "max_profit": 0
+            "max_sum": 1,
+            "cur_sum": 1,
+            "n": -3
           },
           "dataStructures": {
-            "prices": {
+            "nums": {
               "type": "array",
               "values": [
-                7,
+                -2,
                 1,
-                5,
-                3,
-                6,
+                -3,
+                4,
+                -1,
+                2,
+                1,
+                -5,
                 4
               ]
             }
           },
-          "actionText": "Compute / Update: min_price = min(min_price, p)",
+          "actionText": "Compute / Update: cur_sum = max(cur_sum, 0) + n",
           "statusText": "State Mutation"
         },
         {
           "stepIndex": 10,
           "line": 6,
-          "lineText": "max_profit = max(max_profit, p - min_price)",
-          "pointers": {
-            "p": 5
-          },
+          "lineText": "max_sum = max(max_sum, cur_sum)",
+          "pointers": {},
           "scalars": {
-            "min_price": 1,
-            "max_profit": 0
+            "max_sum": 1,
+            "cur_sum": -2,
+            "n": -3
           },
           "dataStructures": {
-            "prices": {
+            "nums": {
               "type": "array",
               "values": [
-                7,
+                -2,
                 1,
-                5,
-                3,
-                6,
+                -3,
+                4,
+                -1,
+                2,
+                1,
+                -5,
                 4
               ]
             }
           },
-          "actionText": "Compute / Update: max_profit = max(max_profit, p - min_price)",
+          "actionText": "Compute / Update: max_sum = max(max_sum, cur_sum)",
           "statusText": "State Mutation"
         },
         {
           "stepIndex": 11,
           "line": 4,
-          "lineText": "for p in prices:",
-          "pointers": {
-            "p": 5
-          },
+          "lineText": "for n in nums:",
+          "pointers": {},
           "scalars": {
-            "min_price": 1,
-            "max_profit": 4
+            "max_sum": 1,
+            "cur_sum": -2,
+            "n": -3
           },
           "dataStructures": {
-            "prices": {
+            "nums": {
               "type": "array",
               "values": [
-                7,
+                -2,
                 1,
-                5,
-                3,
-                6,
+                -3,
+                4,
+                -1,
+                2,
+                1,
+                -5,
                 4
               ]
             }
           },
-          "actionText": "Loop iteration (p = 5)",
+          "actionText": "for n in nums:",
           "statusText": "Advancing pointer"
         },
         {
           "stepIndex": 12,
           "line": 5,
-          "lineText": "min_price = min(min_price, p)",
-          "pointers": {
-            "p": 3
-          },
+          "lineText": "cur_sum = max(cur_sum, 0) + n",
+          "pointers": {},
           "scalars": {
-            "min_price": 1,
-            "max_profit": 4
+            "max_sum": 1,
+            "cur_sum": -2,
+            "n": 4
           },
           "dataStructures": {
-            "prices": {
+            "nums": {
               "type": "array",
               "values": [
-                7,
+                -2,
                 1,
-                5,
-                3,
-                6,
+                -3,
+                4,
+                -1,
+                2,
+                1,
+                -5,
                 4
               ]
             }
           },
-          "actionText": "Compute / Update: min_price = min(min_price, p)",
+          "actionText": "Compute / Update: cur_sum = max(cur_sum, 0) + n",
           "statusText": "State Mutation"
         },
         {
           "stepIndex": 13,
           "line": 6,
-          "lineText": "max_profit = max(max_profit, p - min_price)",
-          "pointers": {
-            "p": 3
-          },
+          "lineText": "max_sum = max(max_sum, cur_sum)",
+          "pointers": {},
           "scalars": {
-            "min_price": 1,
-            "max_profit": 4
+            "max_sum": 1,
+            "cur_sum": 4,
+            "n": 4
           },
           "dataStructures": {
-            "prices": {
+            "nums": {
               "type": "array",
               "values": [
-                7,
+                -2,
                 1,
-                5,
-                3,
-                6,
+                -3,
+                4,
+                -1,
+                2,
+                1,
+                -5,
                 4
               ]
             }
           },
-          "actionText": "Compute / Update: max_profit = max(max_profit, p - min_price)",
+          "actionText": "Compute / Update: max_sum = max(max_sum, cur_sum)",
           "statusText": "State Mutation"
         },
         {
           "stepIndex": 14,
           "line": 4,
-          "lineText": "for p in prices:",
-          "pointers": {
-            "p": 3
-          },
+          "lineText": "for n in nums:",
+          "pointers": {},
           "scalars": {
-            "min_price": 1,
-            "max_profit": 4
+            "max_sum": 4,
+            "cur_sum": 4,
+            "n": 4
           },
           "dataStructures": {
-            "prices": {
+            "nums": {
               "type": "array",
               "values": [
-                7,
+                -2,
                 1,
-                5,
-                3,
-                6,
+                -3,
+                4,
+                -1,
+                2,
+                1,
+                -5,
                 4
               ]
             }
           },
-          "actionText": "Loop iteration (p = 3)",
+          "actionText": "for n in nums:",
           "statusText": "Advancing pointer"
         },
         {
           "stepIndex": 15,
           "line": 5,
-          "lineText": "min_price = min(min_price, p)",
-          "pointers": {
-            "p": 6
-          },
+          "lineText": "cur_sum = max(cur_sum, 0) + n",
+          "pointers": {},
           "scalars": {
-            "min_price": 1,
-            "max_profit": 4
+            "max_sum": 4,
+            "cur_sum": 4,
+            "n": -1
           },
           "dataStructures": {
-            "prices": {
+            "nums": {
               "type": "array",
               "values": [
-                7,
+                -2,
                 1,
-                5,
-                3,
-                6,
+                -3,
+                4,
+                -1,
+                2,
+                1,
+                -5,
                 4
               ]
             }
           },
-          "actionText": "Compute / Update: min_price = min(min_price, p)",
+          "actionText": "Compute / Update: cur_sum = max(cur_sum, 0) + n",
           "statusText": "State Mutation"
         },
         {
           "stepIndex": 16,
           "line": 6,
-          "lineText": "max_profit = max(max_profit, p - min_price)",
-          "pointers": {
-            "p": 6
-          },
+          "lineText": "max_sum = max(max_sum, cur_sum)",
+          "pointers": {},
           "scalars": {
-            "min_price": 1,
-            "max_profit": 4
+            "max_sum": 4,
+            "cur_sum": 3,
+            "n": -1
           },
           "dataStructures": {
-            "prices": {
+            "nums": {
               "type": "array",
               "values": [
-                7,
+                -2,
                 1,
-                5,
-                3,
-                6,
+                -3,
+                4,
+                -1,
+                2,
+                1,
+                -5,
                 4
               ]
             }
           },
-          "actionText": "Compute / Update: max_profit = max(max_profit, p - min_price)",
+          "actionText": "Compute / Update: max_sum = max(max_sum, cur_sum)",
           "statusText": "State Mutation"
         },
         {
           "stepIndex": 17,
           "line": 4,
-          "lineText": "for p in prices:",
-          "pointers": {
-            "p": 6
-          },
+          "lineText": "for n in nums:",
+          "pointers": {},
           "scalars": {
-            "min_price": 1,
-            "max_profit": 5
+            "max_sum": 4,
+            "cur_sum": 3,
+            "n": -1
           },
           "dataStructures": {
-            "prices": {
+            "nums": {
               "type": "array",
               "values": [
-                7,
+                -2,
                 1,
-                5,
-                3,
-                6,
+                -3,
+                4,
+                -1,
+                2,
+                1,
+                -5,
                 4
               ]
             }
           },
-          "actionText": "Loop iteration (p = 6)",
+          "actionText": "for n in nums:",
           "statusText": "Advancing pointer"
         },
         {
           "stepIndex": 18,
           "line": 5,
-          "lineText": "min_price = min(min_price, p)",
-          "pointers": {
-            "p": 4
-          },
+          "lineText": "cur_sum = max(cur_sum, 0) + n",
+          "pointers": {},
           "scalars": {
-            "min_price": 1,
-            "max_profit": 5
+            "max_sum": 4,
+            "cur_sum": 3,
+            "n": 2
           },
           "dataStructures": {
-            "prices": {
+            "nums": {
               "type": "array",
               "values": [
-                7,
+                -2,
                 1,
-                5,
-                3,
-                6,
+                -3,
+                4,
+                -1,
+                2,
+                1,
+                -5,
                 4
               ]
             }
           },
-          "actionText": "Compute / Update: min_price = min(min_price, p)",
+          "actionText": "Compute / Update: cur_sum = max(cur_sum, 0) + n",
           "statusText": "State Mutation"
         },
         {
           "stepIndex": 19,
           "line": 6,
-          "lineText": "max_profit = max(max_profit, p - min_price)",
-          "pointers": {
-            "p": 4
-          },
+          "lineText": "max_sum = max(max_sum, cur_sum)",
+          "pointers": {},
           "scalars": {
-            "min_price": 1,
-            "max_profit": 5
+            "max_sum": 4,
+            "cur_sum": 5,
+            "n": 2
           },
           "dataStructures": {
-            "prices": {
+            "nums": {
               "type": "array",
               "values": [
-                7,
+                -2,
                 1,
-                5,
-                3,
-                6,
+                -3,
+                4,
+                -1,
+                2,
+                1,
+                -5,
                 4
               ]
             }
           },
-          "actionText": "Compute / Update: max_profit = max(max_profit, p - min_price)",
+          "actionText": "Compute / Update: max_sum = max(max_sum, cur_sum)",
           "statusText": "State Mutation"
         },
         {
           "stepIndex": 20,
           "line": 4,
-          "lineText": "for p in prices:",
-          "pointers": {
-            "p": 4
-          },
+          "lineText": "for n in nums:",
+          "pointers": {},
           "scalars": {
-            "min_price": 1,
-            "max_profit": 5
+            "max_sum": 5,
+            "cur_sum": 5,
+            "n": 2
           },
           "dataStructures": {
-            "prices": {
+            "nums": {
               "type": "array",
               "values": [
-                7,
+                -2,
                 1,
-                5,
-                3,
-                6,
+                -3,
+                4,
+                -1,
+                2,
+                1,
+                -5,
                 4
               ]
             }
           },
-          "actionText": "Loop iteration (p = 4)",
+          "actionText": "for n in nums:",
           "statusText": "Advancing pointer"
         },
         {
           "stepIndex": 21,
-          "line": 7,
-          "lineText": "return max_profit",
-          "pointers": {
-            "p": 4
-          },
+          "line": 5,
+          "lineText": "cur_sum = max(cur_sum, 0) + n",
+          "pointers": {},
           "scalars": {
-            "min_price": 1,
-            "max_profit": 5
+            "max_sum": 5,
+            "cur_sum": 5,
+            "n": 1
           },
           "dataStructures": {
-            "prices": {
+            "nums": {
               "type": "array",
               "values": [
-                7,
+                -2,
                 1,
-                5,
-                3,
-                6,
+                -3,
+                4,
+                -1,
+                2,
+                1,
+                -5,
                 4
               ]
             }
           },
-          "actionText": "Result Found! Return: 5",
+          "actionText": "Compute / Update: cur_sum = max(cur_sum, 0) + n",
+          "statusText": "State Mutation"
+        },
+        {
+          "stepIndex": 22,
+          "line": 6,
+          "lineText": "max_sum = max(max_sum, cur_sum)",
+          "pointers": {},
+          "scalars": {
+            "max_sum": 5,
+            "cur_sum": 6,
+            "n": 1
+          },
+          "dataStructures": {
+            "nums": {
+              "type": "array",
+              "values": [
+                -2,
+                1,
+                -3,
+                4,
+                -1,
+                2,
+                1,
+                -5,
+                4
+              ]
+            }
+          },
+          "actionText": "Compute / Update: max_sum = max(max_sum, cur_sum)",
+          "statusText": "State Mutation"
+        },
+        {
+          "stepIndex": 23,
+          "line": 4,
+          "lineText": "for n in nums:",
+          "pointers": {},
+          "scalars": {
+            "max_sum": 6,
+            "cur_sum": 6,
+            "n": 1
+          },
+          "dataStructures": {
+            "nums": {
+              "type": "array",
+              "values": [
+                -2,
+                1,
+                -3,
+                4,
+                -1,
+                2,
+                1,
+                -5,
+                4
+              ]
+            }
+          },
+          "actionText": "for n in nums:",
+          "statusText": "Advancing pointer"
+        },
+        {
+          "stepIndex": 24,
+          "line": 5,
+          "lineText": "cur_sum = max(cur_sum, 0) + n",
+          "pointers": {},
+          "scalars": {
+            "max_sum": 6,
+            "cur_sum": 6,
+            "n": -5
+          },
+          "dataStructures": {
+            "nums": {
+              "type": "array",
+              "values": [
+                -2,
+                1,
+                -3,
+                4,
+                -1,
+                2,
+                1,
+                -5,
+                4
+              ]
+            }
+          },
+          "actionText": "Compute / Update: cur_sum = max(cur_sum, 0) + n",
+          "statusText": "State Mutation"
+        },
+        {
+          "stepIndex": 25,
+          "line": 6,
+          "lineText": "max_sum = max(max_sum, cur_sum)",
+          "pointers": {},
+          "scalars": {
+            "max_sum": 6,
+            "cur_sum": 1,
+            "n": -5
+          },
+          "dataStructures": {
+            "nums": {
+              "type": "array",
+              "values": [
+                -2,
+                1,
+                -3,
+                4,
+                -1,
+                2,
+                1,
+                -5,
+                4
+              ]
+            }
+          },
+          "actionText": "Compute / Update: max_sum = max(max_sum, cur_sum)",
+          "statusText": "State Mutation"
+        },
+        {
+          "stepIndex": 26,
+          "line": 4,
+          "lineText": "for n in nums:",
+          "pointers": {},
+          "scalars": {
+            "max_sum": 6,
+            "cur_sum": 1,
+            "n": -5
+          },
+          "dataStructures": {
+            "nums": {
+              "type": "array",
+              "values": [
+                -2,
+                1,
+                -3,
+                4,
+                -1,
+                2,
+                1,
+                -5,
+                4
+              ]
+            }
+          },
+          "actionText": "for n in nums:",
+          "statusText": "Advancing pointer"
+        },
+        {
+          "stepIndex": 27,
+          "line": 5,
+          "lineText": "cur_sum = max(cur_sum, 0) + n",
+          "pointers": {},
+          "scalars": {
+            "max_sum": 6,
+            "cur_sum": 1,
+            "n": 4
+          },
+          "dataStructures": {
+            "nums": {
+              "type": "array",
+              "values": [
+                -2,
+                1,
+                -3,
+                4,
+                -1,
+                2,
+                1,
+                -5,
+                4
+              ]
+            }
+          },
+          "actionText": "Compute / Update: cur_sum = max(cur_sum, 0) + n",
+          "statusText": "State Mutation"
+        },
+        {
+          "stepIndex": 28,
+          "line": 6,
+          "lineText": "max_sum = max(max_sum, cur_sum)",
+          "pointers": {},
+          "scalars": {
+            "max_sum": 6,
+            "cur_sum": 5,
+            "n": 4
+          },
+          "dataStructures": {
+            "nums": {
+              "type": "array",
+              "values": [
+                -2,
+                1,
+                -3,
+                4,
+                -1,
+                2,
+                1,
+                -5,
+                4
+              ]
+            }
+          },
+          "actionText": "Compute / Update: max_sum = max(max_sum, cur_sum)",
+          "statusText": "State Mutation"
+        },
+        {
+          "stepIndex": 29,
+          "line": 4,
+          "lineText": "for n in nums:",
+          "pointers": {},
+          "scalars": {
+            "max_sum": 6,
+            "cur_sum": 5,
+            "n": 4
+          },
+          "dataStructures": {
+            "nums": {
+              "type": "array",
+              "values": [
+                -2,
+                1,
+                -3,
+                4,
+                -1,
+                2,
+                1,
+                -5,
+                4
+              ]
+            }
+          },
+          "actionText": "for n in nums:",
+          "statusText": "Advancing pointer"
+        },
+        {
+          "stepIndex": 30,
+          "line": 7,
+          "lineText": "return max_sum",
+          "pointers": {},
+          "scalars": {
+            "max_sum": 6,
+            "cur_sum": 5,
+            "n": 4
+          },
+          "dataStructures": {
+            "nums": {
+              "type": "array",
+              "values": [
+                -2,
+                1,
+                -3,
+                4,
+                -1,
+                2,
+                1,
+                -5,
+                4
+              ]
+            }
+          },
+          "actionText": "Result Found! Return: 6",
           "statusText": "Algorithm Completed"
         }
       ],
       "codeLines": [
-        "def maxProfit(prices):",
-        "    min_price = float('inf')",
-        "    max_profit = 0",
-        "    for p in prices:",
-        "        min_price = min(min_price, p)",
-        "        max_profit = max(max_profit, p - min_price)",
-        "    return max_profit"
+        "def maxSubArray(nums):",
+        "    max_sum = nums[0]",
+        "    cur_sum = 0",
+        "    for n in nums:",
+        "        cur_sum = max(cur_sum, 0) + n",
+        "        max_sum = max(max_sum, cur_sum)",
+        "    return max_sum"
       ]
     }
   },
-  "audioFile": "voice/ce8bfd8357156c59.mp3",
-  "audioDurationInSeconds": 21.177,
-  "durationInFrames": 666,
+  "audioFile": "voice/2bc8edeb3edec35b.mp3",
+  "audioDurationInSeconds": 20.991,
+  "durationInFrames": 660,
   "captions": [
     {
       "confidence": null,
       "startMs": 0,
-      "endMs": 244,
-      "text": "Here",
-      "timestampMs": 122
+      "endMs": 139,
+      "text": "To",
+      "timestampMs": 69.5
     },
     {
       "confidence": null,
-      "startMs": 290,
-      "endMs": 360,
-      "text": " is",
-      "timestampMs": 325
+      "startMs": 209,
+      "endMs": 476,
+      "text": " find",
+      "timestampMs": 342.5
     },
     {
       "confidence": null,
-      "startMs": 418,
-      "endMs": 534,
-      "text": " how",
-      "timestampMs": 476
-    },
-    {
-      "confidence": null,
-      "startMs": 592,
-      "endMs": 639,
-      "text": " to",
-      "timestampMs": 615.5
-    },
-    {
-      "confidence": null,
-      "startMs": 697,
-      "endMs": 1068,
-      "text": " solve",
-      "timestampMs": 882.5
-    },
-    {
-      "confidence": null,
-      "startMs": 1115,
-      "endMs": 1358,
-      "text": " Best",
-      "timestampMs": 1236.5
-    },
-    {
-      "confidence": null,
-      "startMs": 1405,
-      "endMs": 1707,
-      "text": " Time",
-      "timestampMs": 1556
-    },
-    {
-      "confidence": null,
-      "startMs": 1753,
-      "endMs": 1834,
-      "text": " to",
-      "timestampMs": 1793.5
-    },
-    {
-      "confidence": null,
-      "startMs": 1927,
-      "endMs": 2252,
-      "text": " Buy",
-      "timestampMs": 2089.5
-    },
-    {
-      "confidence": null,
-      "startMs": 2334,
-      "endMs": 2496,
-      "text": " and",
-      "timestampMs": 2415
-    },
-    {
-      "confidence": null,
-      "startMs": 2589,
-      "endMs": 2868,
-      "text": " Sell",
-      "timestampMs": 2728.5
-    },
-    {
-      "confidence": null,
-      "startMs": 2949,
-      "endMs": 3506,
-      "text": " Stock.",
-      "timestampMs": 3227.5
-    },
-    {
-      "confidence": null,
-      "startMs": 3889,
-      "endMs": 4029,
-      "text": " We",
-      "timestampMs": 3959
-    },
-    {
-      "confidence": null,
-      "startMs": 4086.9999999999995,
-      "endMs": 4342,
-      "text": " track",
-      "timestampMs": 4214.5
-    },
-    {
-      "confidence": null,
-      "startMs": 4423,
-      "endMs": 4493,
+      "startMs": 522,
+      "endMs": 592,
       "text": " the",
-      "timestampMs": 4458
+      "timestampMs": 557
     },
     {
       "confidence": null,
-      "startMs": 4563,
-      "endMs": 4876,
-      "text": " lowest",
-      "timestampMs": 4719.5
+      "startMs": 639,
+      "endMs": 1196,
+      "text": " contiguous",
+      "timestampMs": 917.5
     },
     {
       "confidence": null,
-      "startMs": 4934,
-      "endMs": 5271,
-      "text": " buying",
+      "startMs": 1231,
+      "endMs": 1718,
+      "text": " subarray",
+      "timestampMs": 1474.5
+    },
+    {
+      "confidence": null,
+      "startMs": 1776,
+      "endMs": 1916,
+      "text": " with",
+      "timestampMs": 1846
+    },
+    {
+      "confidence": null,
+      "startMs": 1962,
+      "endMs": 2032,
+      "text": " the",
+      "timestampMs": 1997
+    },
+    {
+      "confidence": null,
+      "startMs": 2090,
+      "endMs": 2519,
+      "text": " largest",
+      "timestampMs": 2304.5
+    },
+    {
+      "confidence": null,
+      "startMs": 2566,
+      "endMs": 3030,
+      "text": " sum,",
+      "timestampMs": 2798
+    },
+    {
+      "confidence": null,
+      "startMs": 3239,
+      "endMs": 3425,
+      "text": " we",
+      "timestampMs": 3332
+    },
+    {
+      "confidence": null,
+      "startMs": 3506,
+      "endMs": 3831,
+      "text": " use",
+      "timestampMs": 3668.5
+    },
+    {
+      "confidence": null,
+      "startMs": 3901,
+      "endMs": 4551,
+      "text": " Kadane's",
+      "timestampMs": 4226
+    },
+    {
+      "confidence": null,
+      "startMs": 4667,
+      "endMs": 5538,
+      "text": " Algorithm.",
       "timestampMs": 5102.5
     },
     {
       "confidence": null,
-      "startMs": 5341,
-      "endMs": 5712,
-      "text": " price",
-      "timestampMs": 5526.5
+      "startMs": 5863,
+      "endMs": 5991,
+      "text": " We",
+      "timestampMs": 5927
     },
     {
       "confidence": null,
-      "startMs": 5747,
-      "endMs": 5956,
-      "text": " seen",
-      "timestampMs": 5851.5
-    },
-    {
-      "confidence": null,
-      "startMs": 6026,
-      "endMs": 6153,
-      "text": " so",
-      "timestampMs": 6089.5
-    },
-    {
-      "confidence": null,
-      "startMs": 6246,
+      "startMs": 6060,
       "endMs": 6525,
-      "text": " far",
-      "timestampMs": 6385.5
+      "text": " maintain",
+      "timestampMs": 6292.5
     },
     {
       "confidence": null,
-      "startMs": 6583,
-      "endMs": 6664,
-      "text": " as",
-      "timestampMs": 6623.5
+      "startMs": 6594,
+      "endMs": 6618,
+      "text": " a",
+      "timestampMs": 6606
     },
     {
       "confidence": null,
-      "startMs": 6734,
-      "endMs": 6861,
-      "text": " we",
-      "timestampMs": 6797.5
+      "startMs": 6699,
+      "endMs": 7001,
+      "text": " running",
+      "timestampMs": 6850
     },
     {
       "confidence": null,
-      "startMs": 6943,
-      "endMs": 7326,
-      "text": " iterate",
-      "timestampMs": 7134.5
+      "startMs": 7082,
+      "endMs": 7558,
+      "text": " sum.",
+      "timestampMs": 7320
     },
     {
       "confidence": null,
-      "startMs": 7349,
-      "endMs": 7570,
-      "text": " through",
-      "timestampMs": 7459.5
+      "startMs": 7883,
+      "endMs": 8022,
+      "text": " If",
+      "timestampMs": 7952.5
     },
     {
       "confidence": null,
-      "startMs": 7605,
-      "endMs": 7674,
+      "startMs": 8080.999999999999,
+      "endMs": 8150,
       "text": " the",
-      "timestampMs": 7639.5
+      "timestampMs": 8115.5
     },
     {
       "confidence": null,
-      "startMs": 7721,
-      "endMs": 8336,
-      "text": " days.",
-      "timestampMs": 8028.5
+      "startMs": 8197,
+      "endMs": 8464,
+      "text": " running",
+      "timestampMs": 8330.5
     },
     {
       "confidence": null,
-      "startMs": 8510,
-      "endMs": 8696,
-      "text": " On",
-      "timestampMs": 8603
+      "startMs": 8545,
+      "endMs": 8789,
+      "text": " sum",
+      "timestampMs": 8667
     },
     {
       "confidence": null,
-      "startMs": 8754,
-      "endMs": 8940,
-      "text": " each",
-      "timestampMs": 8847
+      "startMs": 8870,
+      "endMs": 9056,
+      "text": " ever",
+      "timestampMs": 8963
     },
     {
       "confidence": null,
-      "startMs": 8998,
-      "endMs": 9218,
-      "text": " day,",
-      "timestampMs": 9108
+      "startMs": 9125,
+      "endMs": 9381,
+      "text": " dips",
+      "timestampMs": 9253
     },
     {
       "confidence": null,
-      "startMs": 9253,
-      "endMs": 9334,
-      "text": " we",
-      "timestampMs": 9293.5
+      "startMs": 9439,
+      "endMs": 9729,
+      "text": " below",
+      "timestampMs": 9584
     },
     {
       "confidence": null,
-      "startMs": 9404,
-      "endMs": 9927,
-      "text": " calculate",
-      "timestampMs": 9665.5
+      "startMs": 9810,
+      "endMs": 10391,
+      "text": " zero,",
+      "timestampMs": 10100.5
     },
     {
       "confidence": null,
-      "startMs": 9950,
-      "endMs": 10019,
-      "text": " the",
-      "timestampMs": 9984.5
-    },
-    {
-      "confidence": null,
-      "startMs": 10077,
-      "endMs": 10449,
-      "text": " profit",
-      "timestampMs": 10263
-    },
-    {
-      "confidence": null,
-      "startMs": 10484,
-      "endMs": 10553,
-      "text": " if",
-      "timestampMs": 10518.5
-    },
-    {
-      "confidence": null,
-      "startMs": 10600,
+      "startMs": 10565,
       "endMs": 10704,
       "text": " we",
-      "timestampMs": 10652
+      "timestampMs": 10634.5
     },
     {
       "confidence": null,
-      "startMs": 10774,
-      "endMs": 11041,
-      "text": " sell",
-      "timestampMs": 10907.5
+      "startMs": 10797,
+      "endMs": 11180,
+      "text": " reset",
+      "timestampMs": 10988.5
     },
     {
       "confidence": null,
-      "startMs": 11122,
-      "endMs": 11749,
-      "text": " today.",
-      "timestampMs": 11435.5
+      "startMs": 11227,
+      "endMs": 11297,
+      "text": " it",
+      "timestampMs": 11262
     },
     {
       "confidence": null,
-      "startMs": 11993,
-      "endMs": 12121,
-      "text": " If",
-      "timestampMs": 12057
+      "startMs": 11355,
+      "endMs": 11459,
+      "text": " to",
+      "timestampMs": 11407
     },
     {
       "confidence": null,
-      "startMs": 12179,
-      "endMs": 12330,
-      "text": " that",
-      "timestampMs": 12254.5
+      "startMs": 11540,
+      "endMs": 11970,
+      "text": " zero",
+      "timestampMs": 11755
     },
     {
       "confidence": null,
-      "startMs": 12388,
-      "endMs": 12783,
-      "text": " profit",
-      "timestampMs": 12585.5
+      "startMs": 12249,
+      "endMs": 12562,
+      "text": " because",
+      "timestampMs": 12405.5
     },
     {
       "confidence": null,
-      "startMs": 12841,
-      "endMs": 13108,
-      "text": " beats",
-      "timestampMs": 12974.5
+      "startMs": 12585,
+      "endMs": 12620,
+      "text": " a",
+      "timestampMs": 12602.5
     },
     {
       "confidence": null,
-      "startMs": 13154,
-      "endMs": 13270,
-      "text": " our",
-      "timestampMs": 13212
+      "startMs": 12701,
+      "endMs": 13050,
+      "text": " negative",
+      "timestampMs": 12875.5
     },
     {
       "confidence": null,
-      "startMs": 13340,
-      "endMs": 14083,
-      "text": " maximum,",
-      "timestampMs": 13711.5
+      "startMs": 13084,
+      "endMs": 13607,
+      "text": " prefix",
+      "timestampMs": 13345.5
     },
     {
       "confidence": null,
-      "startMs": 14292,
-      "endMs": 14431,
-      "text": " we",
-      "timestampMs": 14361.5
+      "startMs": 13665,
+      "endMs": 13827,
+      "text": " can",
+      "timestampMs": 13746
     },
     {
       "confidence": null,
-      "startMs": 14501,
-      "endMs": 14930,
+      "startMs": 13897,
+      "endMs": 14129,
+      "text": " never",
+      "timestampMs": 14013
+    },
+    {
+      "confidence": null,
+      "startMs": 14199,
+      "endMs": 14408,
+      "text": " help",
+      "timestampMs": 14303.5
+    },
+    {
+      "confidence": null,
+      "startMs": 14489,
+      "endMs": 14814,
+      "text": " us.",
+      "timestampMs": 14651.5
+    },
+    {
+      "confidence": null,
+      "startMs": 15139,
+      "endMs": 15302,
+      "text": " We",
+      "timestampMs": 15220.5
+    },
+    {
+      "confidence": null,
+      "startMs": 15383,
+      "endMs": 15859,
       "text": " update",
-      "timestampMs": 14715.5
+      "timestampMs": 15621
     },
     {
       "confidence": null,
-      "startMs": 14965,
-      "endMs": 15232,
-      "text": " it.",
-      "timestampMs": 15098.5
+      "startMs": 15894,
+      "endMs": 16021.999999999998,
+      "text": " our",
+      "timestampMs": 15958
     },
     {
       "confidence": null,
-      "startMs": 15674,
-      "endMs": 15871,
+      "startMs": 16091.000000000002,
+      "endMs": 16625,
+      "text": " maximum",
+      "timestampMs": 16358
+    },
+    {
+      "confidence": null,
+      "startMs": 16707,
+      "endMs": 16951,
+      "text": " sum",
+      "timestampMs": 16829
+    },
+    {
+      "confidence": null,
+      "startMs": 17020,
+      "endMs": 17101,
+      "text": " at",
+      "timestampMs": 17060.5
+    },
+    {
+      "confidence": null,
+      "startMs": 17183,
+      "endMs": 17427,
+      "text": " each",
+      "timestampMs": 17305
+    },
+    {
+      "confidence": null,
+      "startMs": 17496,
+      "endMs": 18054,
+      "text": " step.",
+      "timestampMs": 17775
+    },
+    {
+      "confidence": null,
+      "startMs": 18297,
+      "endMs": 18506,
       "text": " This",
-      "timestampMs": 15772.5
+      "timestampMs": 18401.5
     },
     {
       "confidence": null,
-      "startMs": 15929,
-      "endMs": 16300,
-      "text": " single",
-      "timestampMs": 16114.5
+      "startMs": 18588,
+      "endMs": 18889,
+      "text": " runs",
+      "timestampMs": 18738.5
     },
     {
       "confidence": null,
-      "startMs": 16347.000000000002,
-      "endMs": 16765,
-      "text": " pass",
-      "timestampMs": 16556
-    },
-    {
-      "confidence": null,
-      "startMs": 16858,
-      "endMs": 17287,
-      "text": " solves",
-      "timestampMs": 17072.5
-    },
-    {
-      "confidence": null,
-      "startMs": 17334,
-      "endMs": 17403,
-      "text": " the",
-      "timestampMs": 17368.5
-    },
-    {
-      "confidence": null,
-      "startMs": 17461,
-      "endMs": 17868,
-      "text": " problem",
-      "timestampMs": 17664.5
-    },
-    {
-      "confidence": null,
-      "startMs": 17914,
-      "endMs": 17984,
+      "startMs": 18959,
+      "endMs": 19052,
       "text": " in",
-      "timestampMs": 17949
+      "timestampMs": 19005.5
     },
     {
       "confidence": null,
-      "startMs": 18077,
-      "endMs": 18402,
-      "text": " linear",
-      "timestampMs": 18239.5
+      "startMs": 19168,
+      "endMs": 19667,
+      "text": " optimal",
+      "timestampMs": 19417.5
     },
     {
       "confidence": null,
-      "startMs": 18495,
-      "endMs": 18936,
+      "startMs": 19760,
+      "endMs": 20271,
       "text": " O(N)",
-      "timestampMs": 18715.5
+      "timestampMs": 20015.5
     },
     {
       "confidence": null,
-      "startMs": 18971,
-      "endMs": 19424,
-      "text": " time",
-      "timestampMs": 19197.5
-    },
-    {
-      "confidence": null,
-      "startMs": 19470,
-      "endMs": 19621,
-      "text": " with",
-      "timestampMs": 19545.5
-    },
-    {
-      "confidence": null,
-      "startMs": 19679,
-      "endMs": 20155,
-      "text": " constant",
-      "timestampMs": 19917
-    },
-    {
-      "confidence": null,
-      "startMs": 20213,
-      "endMs": 21177,
-      "text": " space.",
-      "timestampMs": 20695
+      "startMs": 20306,
+      "endMs": 20991,
+      "text": " time.",
+      "timestampMs": 20648.5
     }
   ]
 }
