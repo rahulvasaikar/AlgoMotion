@@ -19,6 +19,7 @@ out
 *.mov
 .remotion
 public/voice
+sample-props.json
 
 # Logs
 npm-debug.log*

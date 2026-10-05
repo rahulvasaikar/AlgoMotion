@@ -320,10 +320,19 @@ export async function createSolution(input: string, options: { render?: boolean;
     }
   }
 
-  // 6. Save to props file
-  const outPath = options.out || path.join(process.cwd(), "sample-props.json");
-  fs.writeFileSync(outPath, JSON.stringify(finalProps, null, 2), "utf-8");
-  console.log(`\n💾 Solution props saved to: ${outPath}`);
+  // 6. Save to structured output paths
+  const solutionsDir = path.join(process.cwd(), "out", "solutions");
+  const videosDir = path.join(process.cwd(), "out", "videos");
+  if (!fs.existsSync(solutionsDir)) fs.mkdirSync(solutionsDir, { recursive: true });
+  if (!fs.existsSync(videosDir)) fs.mkdirSync(videosDir, { recursive: true });
+
+  const solutionPath = options.out || path.join(solutionsDir, `${slug}.json`);
+  fs.writeFileSync(solutionPath, JSON.stringify(finalProps, null, 2), "utf-8");
+  console.log(`\n💾 Solution props saved to: ${solutionPath}`);
+
+  // Also maintain out/latest.json for quick previewing
+  const latestPath = path.join(process.cwd(), "out", "latest.json");
+  fs.writeFileSync(latestPath, JSON.stringify(finalProps, null, 2), "utf-8");
 
   console.log(`\n----------------------------------------`);
   console.log(`🎬 Title:       ${finalProps.title}`);
@@ -334,17 +343,17 @@ export async function createSolution(input: string, options: { render?: boolean;
   console.log(`⏱️  Complexity:  ${finalProps.payload?.timeComplexity} Time / ${finalProps.payload?.spaceComplexity} Space`);
   console.log(`----------------------------------------`);
 
-  // 5. If --render is passed, render immediately
+  // 7. If --render is passed, render to out/videos/<slug>.mp4
+  const videoOut = path.join(videosDir, `${slug}.mp4`);
   if (options.render) {
-    const videoOut = path.join("out", `${slug}.mp4`);
     console.log(`\n🎥 Rendering video to ${videoOut}...`);
-    execSync(`npx remotion render AlgoMotion-Engine "${videoOut}" --props="${outPath}"`, {
+    execSync(`npx remotion render AlgoMotion-Engine "${videoOut}" --props="${solutionPath}"`, {
       stdio: "inherit",
     });
     console.log(`🎉 Video rendered successfully to: ${videoOut}`);
   } else {
     console.log(`\n💡 To render this video, run:`);
-    console.log(`   npx remotion render AlgoMotion-Engine out/${slug}.mp4 --props=${outPath}`);
+    console.log(`   npx remotion render AlgoMotion-Engine "out/videos/${slug}.mp4" --props="${solutionPath}"`);
     console.log(`   or preview in Studio: npm run dev\n`);
   }
 }
@@ -363,7 +372,7 @@ Examples:
 
 Options:
   --render     Automatically render video after creating solution
-  --out=<file> Custom props output path (default: sample-props.json)
+  --out=<file> Custom props output path (default: out/solutions/<slug>.json)
 `);
   process.exit(0);
 }
