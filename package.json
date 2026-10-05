@@ -5,12 +5,19 @@
   "repository": {},
   "license": "UNLICENSED",
   "private": true,
+  "type": "module",
   "dependencies": {
     "@remotion/cli": "4.0.532",
+    "@remotion/captions": "4.0.532",
+    "@remotion/elevenlabs": "^4.0.532",
+    "@remotion/media": "^4.0.532",
+    "@remotion/media-utils": "^4.0.532",
+    "@remotion/tailwind-v4": "4.0.532",
+    "dotenv": "^18.0.5",
+    "elevenlabs": "^1.59.0",
     "react": "19.2.3",
     "react-dom": "19.2.3",
     "remotion": "4.0.532",
-    "@remotion/tailwind-v4": "4.0.532",
     "tailwindcss": "4.0.0"
   },
   "devDependencies": {
@@ -24,6 +31,7 @@
   "scripts": {
     "dev": "remotion studio",
     "build": "remotion bundle",
+    "generate": "node scripts/generate.ts",
     "upgrade": "remotion upgrade",
     "lint": "eslint src && tsc"
   },

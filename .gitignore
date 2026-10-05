@@ -1,7 +1,26 @@
+# Dependencies
 node_modules
 dist
-.DS_Store
-.env
 
-# Ignore the output video from Git but not videos you import into src/.
+# OS files
+.DS_Store
+Thumbs.db
+
+# Environment variables & secrets
+.env
+.env.*
+.env.local
+!.env.example
+
+# Video outputs & Remotion cache
 out
+*.mp4
+*.webm
+*.mov
+.remotion
+public/voice
+
+# Logs
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*

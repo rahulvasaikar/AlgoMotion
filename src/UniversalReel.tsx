@@ -1,0 +1,69 @@
+import React from "react";
+import { Audio } from "@remotion/media";
+import { useCurrentFrame, useVideoConfig } from "remotion";
+import type { AlgoMotionProps } from "./types";
+import { ArrayAlgorithm } from "./templates/ArrayAlgorithm";
+import { UIBreakdown } from "./templates/UIBreakdown";
+import { CodeExplainer } from "./templates/CodeExplainer";
+
+export const UniversalReel: React.FC<AlgoMotionProps> = (props) => {
+  const { templateType, audioUrl, captions } = props;
+  const frame = useCurrentFrame();
+  const { fps } = useVideoConfig();
+
+  // Find active caption if available
+  const currentTimeMs = (frame / fps) * 1000;
+  const currentCaption = captions?.find(
+    (c) => currentTimeMs >= c.startMs && currentTimeMs <= c.endMs,
+  );
+
+  const renderTemplate = () => {
+    switch (templateType) {
+      case "array-algorithm":
+        return <ArrayAlgorithm {...props} />;
+      case "ui-breakdown":
+        return <UIBreakdown {...props} />;
+      case "code-explainer":
+        return <CodeExplainer {...props} />;
+      default:
+        return (
+          <div className="w-full h-full bg-[#080c14] text-white flex flex-col items-center justify-center p-10 font-sans text-center">
+            <span className="px-3.5 py-1.5 rounded-full text-xs font-bold uppercase tracking-wider bg-indigo-500/20 text-indigo-300 border border-indigo-500/40 mb-4">
+              Universal Dispatcher
+            </span>
+            <h1 className="text-4xl font-black mb-2">{props.title}</h1>
+            <p className="text-slate-400 text-sm max-w-sm mb-6">
+              Template Archetype:{" "}
+              <code className="text-indigo-400 font-mono">
+                {templateType || "unknown"}
+              </code>
+            </p>
+            <div className="p-4 rounded-xl bg-slate-900 border border-slate-800 text-xs text-slate-500 font-mono">
+              Payload: {JSON.stringify(props.payload || {})}
+            </div>
+          </div>
+        );
+    }
+  };
+
+  return (
+    <div className="relative w-full h-full overflow-hidden">
+      {/* 1. Synchronous ElevenLabs Audio Playback */}
+      {audioUrl && <Audio src={audioUrl} />}
+
+      {/* 2. Dispatched Visual Archetype Component */}
+      {renderTemplate()}
+
+      {/* 3. Short-Form Dynamic Word Caption Overlay */}
+      {currentCaption && (
+        <div className="absolute bottom-[23rem] left-0 right-0 z-50 flex justify-center px-8 pointer-events-none">
+          <div className="px-6 py-2.5 rounded-2xl bg-black/90 border border-amber-500/40 shadow-[0_0_35px_rgba(245,158,11,0.3)] backdrop-blur-md">
+            <span className="text-3xl font-black tracking-wide text-transparent bg-clip-text bg-gradient-to-r from-amber-200 via-yellow-300 to-amber-400 drop-shadow-md uppercase">
+              {currentCaption.text.trim()}
+            </span>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+};
