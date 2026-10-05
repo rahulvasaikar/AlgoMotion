@@ -5,19 +5,11 @@ import {
   useCurrentFrame,
   useVideoConfig,
 } from "remotion";
-import type { AlgoMotionProps, ArrayAlgorithmPayload } from "../types";
-
-interface StepState {
-  currentIndex: number;
-  currentNum: number;
-  complement: number;
-  found: boolean;
-  matchIndex: number | null;
-  mapEntries: Array<{ key: number; index: number }>;
-  codeLine: number;
-  statusText: string;
-  actionText: string;
-}
+import type { AlgoMotionProps, ArrayAlgorithmPayload, TraceStep } from "../types";
+import { ArrayTrack } from "../components/primitives/ArrayTrack";
+import { MemoryBank } from "../components/primitives/MemoryBank";
+import { VariableDashboard } from "../components/primitives/VariableDashboard";
+import { CodeViewer } from "../components/primitives/CodeViewer";
 
 export const ArrayAlgorithm: React.FC<AlgoMotionProps> = ({
   title,
@@ -31,21 +23,31 @@ export const ArrayAlgorithm: React.FC<AlgoMotionProps> = ({
     const p = payload as unknown as Partial<ArrayAlgorithmPayload> | undefined;
     return {
       array: p?.array ?? [2, 7, 11, 15],
-      target: p?.target ?? 9,
+      target: p?.target,
       algorithm: p?.algorithm ?? "two-sum",
       problemNumber: p?.problemNumber ?? 1,
       difficulty: p?.difficulty ?? "Easy",
       timeComplexity: p?.timeComplexity ?? "O(n)",
       spaceComplexity: p?.spaceComplexity ?? "O(n)",
       code: p?.code,
+      trace: p?.trace,
     };
   }, [payload]);
 
-  // Compute step-by-step algorithm trace
-  const { steps, solution } = useMemo(() => {
+  // Compute step-by-step algorithm trace (using real execution trace or fallback)
+  const { steps, solution, codeLines } = useMemo(() => {
+    if (data.trace && data.trace.steps && data.trace.steps.length > 0) {
+      return {
+        steps: data.trace.steps,
+        solution: data.trace.returnValue,
+        codeLines: data.trace.codeLines || (data.code ? data.code.split("\n") : []),
+      };
+    }
+
+    // Heuristic Two-Sum fallback if trace was not pre-generated
     const arr = data.array;
-    const target = data.target;
-    const generatedSteps: StepState[] = [];
+    const target = data.target ?? 9;
+    const generatedSteps: TraceStep[] = [];
     const map = new Map<number, number>();
     let sol: [number, number] | null = null;
 
@@ -54,47 +56,64 @@ export const ArrayAlgorithm: React.FC<AlgoMotionProps> = ({
       const complement = target - num;
       const currentMapEntries = Array.from(map.entries()).map(([k, v]) => ({
         key: k,
-        index: v,
+        value: v,
       }));
 
       if (map.has(complement)) {
         const matchIdx = map.get(complement)!;
         sol = [matchIdx, i];
         generatedSteps.push({
-          currentIndex: i,
-          currentNum: num,
-          complement,
-          found: true,
-          matchIndex: matchIdx,
-          mapEntries: currentMapEntries,
-          codeLine: 4,
+          stepIndex: generatedSteps.length,
+          line: 5,
+          lineText: "return [prevMap[diff], i]",
+          pointers: { i },
+          scalars: { target, diff: complement, current: num },
+          dataStructures: {
+            prevMap: { type: "map", entries: currentMapEntries },
+          },
           statusText: `Memory Check: Is ${complement} in Map? 👉 YES!`,
           actionText: `Found ${complement} at index ${matchIdx}! Match: [${matchIdx}, ${i}]`,
         });
         break;
       } else {
         generatedSteps.push({
-          currentIndex: i,
-          currentNum: num,
-          complement,
-          found: false,
-          matchIndex: null,
-          mapEntries: currentMapEntries,
-          codeLine: 5,
+          stepIndex: generatedSteps.length,
+          line: 6,
+          lineText: "prevMap[n] = i",
+          pointers: { i },
+          scalars: { target, diff: complement, current: num },
+          dataStructures: {
+            prevMap: { type: "map", entries: currentMapEntries },
+          },
           statusText: `Memory Check: Is ${complement} in Map? ❌ NO`,
-          actionText: `Store current number: [Key: ${num} ➔ Index: ${i}]`,
+          actionText: `Store in memory: Key ${num} ➔ Index ${i}`,
         });
         map.set(num, i);
       }
     }
 
-    return { steps: generatedSteps, solution: sol };
-  }, [data.array, data.target]);
+    const defaultCode = [
+      "def twoSum(nums, target):",
+      "    prevMap = {} # val -> index",
+      "    for i, n in enumerate(nums):",
+      "        diff = target - n",
+      "        if diff in prevMap:",
+      "            return [prevMap[diff], i]",
+      "        prevMap[n] = i",
+      "    return []",
+    ];
+
+    return {
+      steps: generatedSteps,
+      solution: sol,
+      codeLines: data.code ? data.code.split("\n") : defaultCode,
+    };
+  }, [data.array, data.target, data.trace, data.code]);
 
   // Phased Timeline:
-  // Phase 1: Problem Definition & Requirement Hook (first ~100 frames = ~3.3s)
-  // Phase 2: Live Step-by-Step Simulation (middle frames)
-  // Phase 3: Final Output & Complexities (last ~80 frames)
+  // Phase 1: Problem Definition & Requirement Hook (first ~28% of video)
+  // Phase 2: Live Step-by-Step Simulation (middle ~50%)
+  // Phase 3: Final Output & Complexities (last ~22%)
   const introDuration = Math.min(110, Math.floor(durationInFrames * 0.28));
   const outroDuration = Math.min(85, Math.floor(durationInFrames * 0.22));
   const simulationDuration = Math.max(
@@ -115,10 +134,10 @@ export const ArrayAlgorithm: React.FC<AlgoMotionProps> = ({
           Math.floor((frame - introDuration) / stepDuration),
         );
 
-  const activeStep: StepState | null =
+  const activeStep: TraceStep | null =
     currentStepIndex >= 0 ? steps[currentStepIndex] : null;
 
-  // Frame-driven animations
+  // Frame animations
   const headerSlide = spring({
     frame,
     fps,
@@ -131,10 +150,35 @@ export const ArrayAlgorithm: React.FC<AlgoMotionProps> = ({
     config: { damping: 12, stiffness: 100 },
   });
 
-  const pulse = 0.5 + 0.5 * Math.sin((frame * Math.PI) / 20);
+  // Extract memory structures from active step
+  const activeMapEntries = useMemo(() => {
+    if (!activeStep?.dataStructures) return undefined;
+    for (const val of Object.values(activeStep.dataStructures)) {
+      if (val.type === "map") return val.entries;
+    }
+    return undefined;
+  }, [activeStep]);
 
-  const isMatchFound =
-    isOutroPhase || (activeStep !== null && activeStep.found);
+  const activeSetItems = useMemo(() => {
+    if (!activeStep?.dataStructures) return undefined;
+    for (const val of Object.values(activeStep.dataStructures)) {
+      if (val.type === "set") return val.items;
+    }
+    return undefined;
+  }, [activeStep]);
+
+  // Highlighted indices from solution if array indices
+  const matchIndices = useMemo(() => {
+    if (Array.isArray(solution) && solution.length > 0 && typeof solution[0] === "number") {
+      return solution as number[];
+    }
+    return [];
+  }, [solution]);
+
+  const activeIndices = useMemo(() => {
+    if (!activeStep) return [];
+    return Object.values(activeStep.pointers);
+  }, [activeStep]);
 
   return (
     <div className="relative w-full h-full bg-[#070b14] text-white flex flex-col justify-between p-8 font-sans overflow-hidden select-none">
@@ -212,246 +256,142 @@ export const ArrayAlgorithm: React.FC<AlgoMotionProps> = ({
               <span className="px-3 py-1 rounded-lg bg-indigo-500/20 border border-indigo-500/40 text-xs font-black uppercase tracking-wider text-indigo-300">
                 The Objective
               </span>
-              <span className="text-xs font-mono text-slate-400">
-                Target Sum = {data.target}
-              </span>
-            </div>
-
-            {/* Big Visual Equation Hook */}
-            <div className="flex flex-col items-center justify-center gap-3 py-6 bg-slate-950/70 rounded-2xl border border-slate-800">
-              <span className="text-xs uppercase font-bold tracking-widest text-slate-500">
-                Find Two Numbers That Satisfy:
-              </span>
-              <div className="flex items-center gap-3 font-mono font-black text-3xl">
-                <div className="w-16 h-16 rounded-2xl bg-indigo-500/20 border-2 border-dashed border-indigo-400 flex items-center justify-center text-indigo-300 shadow-inner">
-                  ?
-                </div>
-                <span className="text-slate-400 text-2xl font-light">+</span>
-                <div className="w-16 h-16 rounded-2xl bg-cyan-500/20 border-2 border-dashed border-cyan-400 flex items-center justify-center text-cyan-300 shadow-inner">
-                  ?
-                </div>
-                <span className="text-slate-400 text-2xl font-light">=</span>
-                <div className="px-5 h-16 rounded-2xl bg-emerald-500/20 border-2 border-emerald-400 flex items-center justify-center text-emerald-300 shadow-[0_0_20px_rgba(16,185,129,0.3)]">
-                  {data.target}
-                </div>
-              </div>
-            </div>
-
-            {/* Crucial Requirement Callout */}
-            <div className="p-4 rounded-xl bg-amber-500/10 border border-amber-500/30 flex items-start gap-3">
-              <span className="text-xl">⚠️</span>
-              <div className="flex flex-col text-xs text-amber-200">
-                <span className="font-black uppercase tracking-wider">
-                  Important Contract:
+              {data.target !== undefined && (
+                <span className="text-xs font-mono text-slate-400">
+                  Target = {data.target}
                 </span>
-                <span className="text-slate-300 mt-0.5 leading-relaxed">
-                  Return the <strong>INDICES</strong> of the two numbers, not
-                  the numbers themselves! (e.g., return{" "}
-                  <code className="text-amber-300 font-mono font-bold bg-amber-500/20 px-1 py-0.5 rounded">
-                    [{solution ? solution.join(", ") : "0, 1"}]
-                  </code>
-                  )
+              )}
+            </div>
+
+            {/* Problem Archetype Hook */}
+            {data.algorithm === "two-sum" ? (
+              <div className="flex flex-col items-center justify-center gap-3 py-6 bg-slate-950/70 rounded-2xl border border-slate-800">
+                <span className="text-xs uppercase font-bold tracking-widest text-slate-500">
+                  Find Two Numbers That Satisfy:
+                </span>
+                <div className="flex items-center gap-3 font-mono font-black text-3xl">
+                  <div className="w-16 h-16 rounded-2xl bg-indigo-500/20 border-2 border-dashed border-indigo-400 flex items-center justify-center text-indigo-300 shadow-inner">
+                    ?
+                  </div>
+                  <span className="text-slate-400 text-2xl font-light">+</span>
+                  <div className="w-16 h-16 rounded-2xl bg-cyan-500/20 border-2 border-dashed border-cyan-400 flex items-center justify-center text-cyan-300 shadow-inner">
+                    ?
+                  </div>
+                  <span className="text-slate-400 text-2xl font-light">=</span>
+                  <div className="px-5 h-16 rounded-2xl bg-emerald-500/20 border-2 border-emerald-400 flex items-center justify-center text-emerald-300 shadow-[0_0_20px_rgba(16,185,129,0.3)]">
+                    {data.target ?? 9}
+                  </div>
+                </div>
+                <span className="text-xs font-mono text-amber-300 font-bold mt-1">
+                  Return INDICES [i, j], not values!
                 </span>
               </div>
-            </div>
+            ) : data.algorithm === "best-time-to-buy-and-sell-stock" ? (
+              <div className="flex flex-col items-center justify-center gap-3 py-6 bg-slate-950/70 rounded-2xl border border-slate-800 text-center px-4">
+                <span className="text-xs uppercase font-bold tracking-widest text-slate-500">
+                  Single-Pass Greedy Strategy:
+                </span>
+                <span className="text-xl font-mono font-black text-emerald-300">
+                  Max Profit = Price[Sell] - Price[Buy]
+                </span>
+                <span className="text-xs text-slate-400 font-mono">
+                  Constraint: Must buy BEFORE you sell (Sell Day &gt; Buy Day)
+                </span>
+                <div className="px-4 py-2 rounded-xl bg-indigo-500/10 border border-indigo-500/30 text-indigo-300 text-xs font-mono font-bold">
+                  Track min_price seen so far ➔ Update max_profit
+                </div>
+              </div>
+            ) : data.algorithm === "contains-duplicate" ? (
+              <div className="flex flex-col items-center justify-center gap-3 py-6 bg-slate-950/70 rounded-2xl border border-slate-800 text-center px-4">
+                <span className="text-xs uppercase font-bold tracking-widest text-slate-500">
+                  Duplicate Detection:
+                </span>
+                <span className="text-xl font-mono font-black text-amber-300">
+                  Return True if any value appears ≥ 2 times
+                </span>
+                <div className="px-4 py-2 rounded-xl bg-cyan-500/10 border border-cyan-500/30 text-cyan-300 text-xs font-mono font-bold">
+                  Hash Set O(1) Lookups vs O(N²) Brute Force
+                </div>
+              </div>
+            ) : (
+              <div className="flex flex-col items-center justify-center gap-3 py-6 bg-slate-950/70 rounded-2xl border border-slate-800 text-center px-4">
+                <span className="text-xs uppercase font-bold tracking-widest text-slate-500">
+                  Optimal Linear Pass:
+                </span>
+                <span className="text-xl font-mono font-black text-cyan-300">
+                  Avoid O(N²) Nested Iterations
+                </span>
+                <div className="px-4 py-2 rounded-xl bg-indigo-500/10 border border-indigo-500/30 text-indigo-300 text-xs font-mono font-bold">
+                  Single Traversal O(N) Time
+                </div>
+              </div>
+            )}
 
-            {/* Formula Transformation */}
-            <div className="p-4 rounded-xl bg-slate-950/60 border border-slate-800/80 flex items-center justify-between text-xs font-mono">
-              <span className="text-slate-400">Optimal Intuition:</span>
+            {/* Input preview */}
+            <div className="p-3.5 rounded-xl bg-slate-950/60 border border-slate-800/80 flex items-center justify-between text-xs font-mono">
+              <span className="text-slate-400">Input Data:</span>
               <span className="text-cyan-300 font-bold">
-                Complement = Target - Current
+                [{data.array.join(", ")}]
               </span>
             </div>
           </div>
         ) : (
-          /* PHASE 2 & 3: INTERACTIVE ARRAY & HASH MAP SIMULATION */
+          /* PHASE 2 & 3: TRACE-DRIVEN SIMULATION */
           <div className="flex flex-col gap-5">
-            {/* Input Array Container */}
-            <div className="flex flex-col gap-2.5">
-              <div className="flex items-center justify-between px-1">
-                <span className="text-xs uppercase font-black tracking-wider text-slate-400">
-                  Input Array: <code className="text-indigo-400 font-mono">nums</code>
-                </span>
-                <span className="text-xs font-mono text-emerald-400 font-bold">
-                  Target = {data.target}
-                </span>
-              </div>
+            {/* Primary Array Track */}
+            <ArrayTrack
+              values={data.array}
+              pointers={activeStep?.pointers ?? {}}
+              activeIndices={activeIndices}
+              matchIndices={isOutroPhase ? matchIndices : []}
+              label="Input Array State"
+            />
 
-              {/* Number cards */}
-              <div className="grid grid-cols-4 gap-3.5">
-                {data.array.map((num, idx) => {
-                  const isCurrent = activeStep?.currentIndex === idx;
-                  const isMatch =
-                    (isMatchFound && solution?.includes(idx)) ||
-                    activeStep?.matchIndex === idx;
-
-                  return (
-                    <div key={idx} className="flex flex-col items-center gap-1.5">
-                      {/* Index Label */}
-                      <span
-                        className={`text-[11px] font-mono font-bold ${
-                          isMatch
-                            ? "text-emerald-400"
-                            : isCurrent
-                              ? "text-cyan-400"
-                              : "text-slate-500"
-                        }`}
-                      >
-                        idx {idx}
-                      </span>
-
-                      {/* Number Tile */}
-                      <div
-                        className={`relative w-full aspect-square rounded-2xl flex items-center justify-center font-mono font-black text-3xl border ${
-                          isMatch
-                            ? "bg-emerald-500/25 border-emerald-400 text-emerald-200 shadow-[0_0_35px_rgba(16,185,129,0.5)] scale-105"
-                            : isCurrent
-                              ? "bg-cyan-500/20 border-cyan-400 text-cyan-200 shadow-[0_0_25px_rgba(6,182,212,0.4)] scale-105"
-                              : "bg-slate-900/80 border-slate-800 text-slate-300"
-                        }`}
-                      >
-                        {num}
-
-                        {/* Top Active Pointer */}
-                        {isCurrent && (
-                          <div className="absolute -top-3.5 px-2 py-0.5 rounded-full text-[9px] font-black uppercase tracking-wider bg-cyan-400 text-slate-950 shadow-md">
-                            Pointer i
-                          </div>
-                        )}
-
-                        {/* Bottom Match Pill */}
-                        {isMatch && (
-                          <div className="absolute -bottom-3.5 px-2 py-0.5 rounded-full text-[9px] font-black uppercase tracking-wider bg-emerald-400 text-slate-950 shadow-md">
-                            Match!
-                          </div>
-                        )}
-                      </div>
-                    </div>
-                  );
-                })}
-              </div>
-            </div>
-
-            {/* Glowing Connector Beam when match found */}
-            {isMatchFound && solution && (
-              <div className="p-3.5 rounded-2xl bg-emerald-950/40 border border-emerald-500/50 flex items-center justify-center gap-3 text-xs font-mono font-bold text-emerald-300 shadow-[0_0_25px_rgba(16,185,129,0.2)]">
-                <span>nums[{solution[0]}] ({data.array[solution[0]]})</span>
-                <span className="text-white">+</span>
-                <span>nums[{solution[1]}] ({data.array[solution[1]]})</span>
-                <span className="text-white">=</span>
-                <span className="px-2 py-0.5 bg-emerald-500/30 rounded text-emerald-200 font-black">
-                  Target {data.target}
-                </span>
-              </div>
+            {/* Live Scalar Variables Dashboard */}
+            {activeStep?.scalars && (
+              <VariableDashboard scalars={activeStep.scalars} />
             )}
 
-            {/* Live Step Math Inspection Card */}
+            {/* Active Step Explanatory Card */}
             {activeStep && (
-              <div className="p-4 rounded-2xl bg-slate-900/90 border border-slate-800 shadow-xl flex flex-col gap-2.5">
+              <div className="p-4 rounded-2xl bg-slate-900/95 border border-slate-800 shadow-2xl flex flex-col gap-2">
                 <div className="flex items-center justify-between text-xs">
                   <span className="uppercase font-bold tracking-wider text-slate-400">
-                    Step {currentStepIndex + 1}: Visiting Index {activeStep.currentIndex}
+                    Step {currentStepIndex + 1} of {steps.length}
                   </span>
-                  <span className="font-mono text-cyan-400 font-semibold">
-                    Current = {activeStep.currentNum}
-                  </span>
-                </div>
-
-                {/* Arithmetic Equation */}
-                <div className="flex items-center justify-center gap-2.5 py-2.5 bg-slate-950/70 rounded-xl font-mono text-base border border-slate-800">
-                  <span className="text-slate-400 text-xs uppercase font-bold">
-                    Need:
-                  </span>
-                  <span className="text-indigo-400 font-bold">
-                    {data.target} (Target)
-                  </span>
-                  <span className="text-slate-500">-</span>
-                  <span className="text-cyan-400 font-bold">
-                    {activeStep.currentNum}
-                  </span>
-                  <span className="text-slate-500">=</span>
-                  <span className="text-amber-400 font-black text-lg underline decoration-2 underline-offset-4">
-                    {activeStep.complement}
+                  <span className="font-mono text-cyan-400 font-semibold px-2 py-0.5 rounded bg-cyan-500/10 border border-cyan-500/30">
+                    Line {activeStep.line}
                   </span>
                 </div>
 
-                {/* Action status message */}
                 <div className="flex flex-col gap-1 text-xs">
                   <span className="font-mono text-slate-300">
                     {activeStep.statusText}
                   </span>
-                  <span className={`font-semibold ${activeStep.found ? "text-emerald-400" : "text-indigo-300"}`}>
+                  <span className="font-bold text-emerald-300 text-base">
                     {activeStep.actionText}
                   </span>
                 </div>
               </div>
             )}
 
-            {/* Hash Map Memory Bank */}
-            <div className="p-4 rounded-2xl bg-slate-900/70 border border-slate-800/90 shadow-xl flex flex-col gap-2.5 backdrop-blur-md">
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-2">
-                  <div
-                    className="w-2.5 h-2.5 rounded-full bg-indigo-500"
-                    style={{ opacity: pulse }}
-                  />
-                  <span className="text-xs uppercase font-black tracking-wider text-slate-300">
-                    Hash Map Memory (prevMap)
-                  </span>
-                </div>
-                <span className="text-[11px] font-mono text-slate-500">
-                  O(1) Instant Lookup
-                </span>
-              </div>
-
-              {/* Column labels */}
-              <div className="grid grid-cols-2 gap-2 text-[11px] font-mono">
-                <div className="px-3 py-1.5 rounded-lg bg-slate-950/60 text-slate-400 font-semibold border border-slate-800/60">
-                  Key: Value Seen
-                </div>
-                <div className="px-3 py-1.5 rounded-lg bg-slate-950/60 text-slate-400 font-semibold border border-slate-800/60">
-                  Value: Stored Index
-                </div>
-              </div>
-
-              {/* Memory rows */}
-              <div className="flex flex-col gap-1.5 max-h-32 overflow-hidden">
-                {(!activeStep || activeStep.mapEntries.length === 0) && (
-                  <div className="py-3 text-center text-xs text-slate-500 font-mono italic">
-                    (Memory empty — no previous complements yet)
-                  </div>
-                )}
-
-                {activeStep?.mapEntries.map((entry) => {
-                  const isMatchKey = entry.key === activeStep.complement;
-                  return (
-                    <div
-                      key={entry.key}
-                      className={`grid grid-cols-2 gap-2 text-xs font-mono px-3 py-2 rounded-lg border ${
-                        isMatchKey && activeStep.found
-                          ? "bg-emerald-500/25 border-emerald-500/50 text-emerald-300 font-black shadow-[0_0_15px_rgba(16,185,129,0.3)]"
-                          : "bg-slate-950/40 border-slate-800/40 text-slate-300"
-                      }`}
-                    >
-                      <span className="flex items-center gap-2">
-                        {isMatchKey && activeStep.found && <span>🎯</span>}
-                        {entry.key}
-                      </span>
-                      <span>Index {entry.index}</span>
-                    </div>
-                  );
-                })}
-              </div>
-            </div>
+            {/* Memory Bank (HashMap or HashSet if present) */}
+            {(activeMapEntries !== undefined || activeSetItems !== undefined) && (
+              <MemoryBank
+                entries={activeMapEntries}
+                items={activeSetItems}
+                title={activeMapEntries ? "Hash Map (Memory)" : "Hash Set (Seen)"}
+              />
+            )}
           </div>
         )}
       </div>
 
       {/* ───────────────────────────────────────────────────────────── */}
-      {/* BOTTOM SECTION: Solution Verdict OR Code Box                   */}
+      {/* BOTTOM SECTION: Final Solution Verdict OR Code Viewer          */}
       {/* ───────────────────────────────────────────────────────────── */}
       <div className="relative z-10 flex flex-col gap-3 pb-6">
-        {solution && isMatchFound ? (
+        {isOutroPhase && solution !== null && solution !== undefined ? (
           /* Victory Solution Card */
           <div className="p-5 rounded-2xl bg-gradient-to-r from-emerald-950/90 via-slate-900/90 to-emerald-950/90 border border-emerald-500/60 shadow-[0_0_35px_rgba(16,185,129,0.3)] flex flex-col gap-3">
             <div className="flex items-center justify-between">
@@ -459,17 +399,19 @@ export const ArrayAlgorithm: React.FC<AlgoMotionProps> = ({
                 <span>🎉</span> SOLUTION CONFIRMED
               </span>
               <span className="px-2.5 py-0.5 rounded-full bg-emerald-500/20 text-emerald-300 text-[10px] font-bold uppercase">
-                Pair Found
+                Optimal Result
               </span>
             </div>
 
             <div className="flex items-center justify-between">
               <div className="flex flex-col">
                 <span className="text-[11px] text-slate-400 font-mono">
-                  Return Indices:
+                  Return Value:
                 </span>
                 <span className="text-3xl font-black font-mono text-white mt-0.5">
-                  [{solution[0]}, {solution[1]}]
+                  {typeof solution === "object"
+                    ? JSON.stringify(solution)
+                    : String(solution)}
                 </span>
               </div>
 
@@ -484,52 +426,12 @@ export const ArrayAlgorithm: React.FC<AlgoMotionProps> = ({
             </div>
           </div>
         ) : (
-          /* Code snippet display */
-          <div className="p-4 rounded-2xl bg-slate-950/90 border border-slate-800/80 shadow-2xl font-mono text-xs">
-            <div className="flex items-center gap-2 pb-2.5 mb-2.5 border-b border-slate-800/80">
-              <span className="w-2.5 h-2.5 rounded-full bg-rose-500/80" />
-              <span className="w-2.5 h-2.5 rounded-full bg-amber-500/80" />
-              <span className="w-2.5 h-2.5 rounded-full bg-emerald-500/80" />
-              <span className="text-[11px] text-slate-500 ml-2">
-                {data.algorithm || "solution"}.py
-              </span>
-            </div>
-
-            <div className="flex flex-col gap-1 text-slate-400">
-              {(data.code
-                ? data.code.split("\n")
-                : [
-                    "prevMap = {} # val -> index",
-                    "for i, n in enumerate(nums):",
-                    "    diff = target - n",
-                    "    if diff in prevMap: return [prevMap[diff], i]",
-                    "    prevMap[n] = i",
-                  ]
-              ).map((line, idx) => {
-                const lineNum = idx + 1;
-                const isHighlight =
-                  activeStep &&
-                  (activeStep.codeLine === lineNum ||
-                    (activeStep.found && idx === 3));
-
-                return (
-                  <div
-                    key={idx}
-                    className={`px-2 py-0.5 rounded whitespace-pre ${
-                      isHighlight
-                        ? "bg-indigo-500/25 text-indigo-200 font-bold border-l-2 border-indigo-400"
-                        : "text-slate-400"
-                    }`}
-                  >
-                    <span className="text-slate-600 mr-2 select-none">
-                      {lineNum} |
-                    </span>
-                    {line}
-                  </div>
-                );
-              })}
-            </div>
-          </div>
+          /* Code Viewer with active line illumination */
+          <CodeViewer
+            codeLines={codeLines}
+            activeLine={activeStep?.line}
+            title={`${data.algorithm || "solution"}.py`}
+          />
         )}
       </div>
     </div>

@@ -3,7 +3,6 @@ import React from "react";
 import { CalculateMetadataFunction, Composition } from "remotion";
 import { UniversalReel } from "./UniversalReel";
 import type { AlgoMotionProps } from "./types";
-import { generateElevenLabsVoiceover } from "./services/elevenlabs";
 
 const defaultProps: AlgoMotionProps = {
   templateType: "array-algorithm",
@@ -19,45 +18,45 @@ const defaultProps: AlgoMotionProps = {
     difficulty: "Easy",
     timeComplexity: "O(n)",
     spaceComplexity: "O(n)",
+    code: "def twoSum(nums, target):\n    prevMap = {}\n    for i, n in enumerate(nums):\n        diff = target - n\n        if diff in prevMap:\n            return [prevMap[diff], i]\n        prevMap[n] = i\n    return []",
   },
 };
 
 export const calculateMetadata: CalculateMetadataFunction<AlgoMotionProps> =
-  async ({ props, abortSignal }) => {
+  async ({ props }) => {
     const fps = 30;
-    const paddingFrames = 30; // 1 second breathing room so speech is never cut off
+    const paddingFrames = 30; // 1 second breathing room
 
-    if (props.voiceoverText && props.voiceoverText.trim().length > 0) {
-      try {
-        const { audioUrl, durationInSeconds, captions } =
-          await generateElevenLabsVoiceover({
-            text: props.voiceoverText,
-            signal: abortSignal,
-          });
-
-        const calculatedDurationInFrames = Math.max(
-          90, // Minimum 3 seconds
-          Math.ceil(durationInSeconds * fps) + paddingFrames,
-        );
-
-        return {
-          durationInFrames: calculatedDurationInFrames,
-          props: {
-            ...props,
-            audioUrl: audioUrl || props.audioUrl,
-            audioDurationInSeconds: durationInSeconds,
-            captions: captions || props.captions,
-          },
-        };
-      } catch (err) {
-        console.error(
-          "[AlgoMotion] calculateMetadata voiceover error, falling back:",
-          err,
-        );
-      }
+    // 1. Direct duration if precalculated during generation
+    if (props.durationInFrames && props.durationInFrames > 0) {
+      return {
+        durationInFrames: props.durationInFrames,
+        props,
+      };
     }
 
-    // Default duration if no voiceover or fallback
+    // 2. Audio duration if provided
+    if (props.audioDurationInSeconds && props.audioDurationInSeconds > 0) {
+      const calculatedDurationInFrames = Math.max(
+        90,
+        Math.ceil(props.audioDurationInSeconds * fps) + paddingFrames,
+      );
+      return {
+        durationInFrames: calculatedDurationInFrames,
+        props,
+      };
+    }
+
+    // 3. Fallback estimated duration based on voiceover word count
+    if (props.voiceoverText && props.voiceoverText.trim().length > 0) {
+      const words = props.voiceoverText.trim().split(/\s+/).length;
+      const estimatedSecs = Math.max(4, words / 2.5);
+      return {
+        durationInFrames: Math.ceil(estimatedSecs * fps) + paddingFrames,
+        props,
+      };
+    }
+
     return {
       durationInFrames: 300,
       props,
@@ -66,27 +65,15 @@ export const calculateMetadata: CalculateMetadataFunction<AlgoMotionProps> =
 
 export const RemotionRoot: React.FC = () => {
   return (
-    <>
-      <Composition
-        id="AlgoMotion-Engine"
-        component={UniversalReel}
-        durationInFrames={300}
-        fps={30}
-        width={1080}
-        height={1920}
-        defaultProps={defaultProps}
-        calculateMetadata={calculateMetadata}
-      />
-      <Composition
-        id="AlgoMotionEngine"
-        component={UniversalReel}
-        durationInFrames={300}
-        fps={30}
-        width={1080}
-        height={1920}
-        defaultProps={defaultProps}
-        calculateMetadata={calculateMetadata}
-      />
-    </>
+    <Composition
+      id="AlgoMotion-Engine"
+      component={UniversalReel}
+      durationInFrames={300}
+      fps={30}
+      width={1080}
+      height={1920}
+      defaultProps={defaultProps}
+      calculateMetadata={calculateMetadata}
+    />
   );
 };

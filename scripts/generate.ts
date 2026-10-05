@@ -2,6 +2,9 @@ import fs from "fs";
 import path from "path";
 import { execSync } from "child_process";
 import dotenv from "dotenv";
+import { traceExecution } from "./pipeline/trace.ts";
+import { verifyTraceOutput } from "./pipeline/verify.ts";
+import { generateTTS } from "./pipeline/tts.ts";
 
 dotenv.config();
 
@@ -266,7 +269,58 @@ export async function createSolution(input: string, options: { render?: boolean;
     }
   }
 
-  // 4. Save to props file
+  // 4. Trace Python Execution
+  const code = finalProps.payload?.code;
+  const arr = finalProps.payload?.array || [2, 7, 11, 15];
+  const target = finalProps.payload?.target;
+
+  if (code) {
+    console.log(`\n⚡ Tracing runtime execution with Python tracer...`);
+    try {
+      const funcDefMatch = code.match(/def\s+\w+\(([^)]+)\)/);
+      const params = funcDefMatch
+        ? funcDefMatch[1].split(",").map((s: string) => s.trim())
+        : ["nums"];
+      const callArgs =
+        params.length >= 2 && target !== undefined ? [arr, target] : [arr];
+
+      const trace = await traceExecution({ code, args: callArgs });
+      finalProps.payload.trace = trace;
+      console.log(
+        `✅ Traced ${trace.totalSteps} steps! Return value:`,
+        trace.returnValue,
+      );
+
+      if (target !== undefined) {
+        const v = verifyTraceOutput(trace.returnValue, target);
+        if (v.valid) console.log(`🎯 Verification:`, v.message);
+      }
+    } catch (traceErr) {
+      console.warn(`[Tracer] Python trace execution warning:`, traceErr);
+    }
+  }
+
+  // 5. Generate Voiceover via ElevenLabs (Cached to public/voice)
+  if (finalProps.voiceoverText) {
+    console.log(`\n🎙️ Synthesizing voiceover with ElevenLabs...`);
+    try {
+      const tts = await generateTTS({ text: finalProps.voiceoverText });
+      finalProps.audioFile = tts.audioFile;
+      finalProps.audioDurationInSeconds = tts.durationInSeconds;
+      finalProps.durationInFrames = Math.max(
+        90,
+        Math.ceil(tts.durationInSeconds * 30) + 30,
+      );
+      finalProps.captions = tts.captions;
+      console.log(
+        `🎧 Voiceover ready: ${tts.audioFile || "none"} (${tts.durationInSeconds.toFixed(2)}s, ${finalProps.durationInFrames} frames)`,
+      );
+    } catch (ttsErr) {
+      console.warn(`[TTS] Voiceover synthesis warning:`, ttsErr);
+    }
+  }
+
+  // 6. Save to props file
   const outPath = options.out || path.join(process.cwd(), "sample-props.json");
   fs.writeFileSync(outPath, JSON.stringify(finalProps, null, 2), "utf-8");
   console.log(`\n💾 Solution props saved to: ${outPath}`);

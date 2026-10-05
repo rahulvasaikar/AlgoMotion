@@ -1,13 +1,13 @@
 import React from "react";
 import { Audio } from "@remotion/media";
-import { useCurrentFrame, useVideoConfig } from "remotion";
+import { staticFile, useCurrentFrame, useVideoConfig } from "remotion";
 import type { AlgoMotionProps } from "./types";
 import { ArrayAlgorithm } from "./templates/ArrayAlgorithm";
 import { UIBreakdown } from "./templates/UIBreakdown";
 import { CodeExplainer } from "./templates/CodeExplainer";
 
 export const UniversalReel: React.FC<AlgoMotionProps> = (props) => {
-  const { templateType, audioUrl, captions } = props;
+  const { templateType, audioUrl, audioFile, captions } = props;
   const frame = useCurrentFrame();
   const { fps } = useVideoConfig();
 
@@ -49,7 +49,11 @@ export const UniversalReel: React.FC<AlgoMotionProps> = (props) => {
   return (
     <div className="relative w-full h-full overflow-hidden">
       {/* 1. Synchronous ElevenLabs Audio Playback */}
-      {audioUrl && <Audio src={audioUrl} />}
+      {audioFile ? (
+        <Audio src={staticFile(audioFile)} />
+      ) : audioUrl ? (
+        <Audio src={audioUrl} />
+      ) : null}
 
       {/* 2. Dispatched Visual Archetype Component */}
       {renderTemplate()}
