@@ -42,6 +42,14 @@ export type TemplateType =
   | "code-explainer"
   | (string & {});
 
+export type ReelTheme = "cyber" | "terminal" | "minimal";
+
+export interface BrandingConfig {
+  name: string;
+  tag?: string;
+  handle?: string;
+}
+
 export type AlgoMotionProps = {
   templateType: TemplateType;
   title: string;
@@ -54,6 +62,9 @@ export type AlgoMotionProps = {
   durationInFrames?: number;
   captions?: Caption[];
   accentColor?: string;
+  theme?: ReelTheme;
+  branding?: BrandingConfig;
+  bgMusic?: boolean;
   [key: string]: unknown;
 };
 

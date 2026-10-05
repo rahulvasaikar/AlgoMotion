@@ -4,7 +4,9 @@ import { execSync } from "child_process";
 import dotenv from "dotenv";
 import { traceExecution } from "./pipeline/trace.ts";
 import { verifyTraceOutput } from "./pipeline/verify.ts";
-import { generateTTS } from "./pipeline/tts.ts";
+import { generateTTS, CURATED_VOICES } from "./pipeline/tts.ts";
+import { exportSocialAssets } from "./pipeline/social.ts";
+import type { ReelTheme } from "../src/types.ts";
 
 dotenv.config();
 
@@ -103,6 +105,40 @@ const BUILTIN_SOLUTIONS: Record<string, any> = {
       code: "def maxSubArray(nums):\n    max_sum = nums[0]\n    cur_sum = 0\n    for n in nums:\n        cur_sum = max(cur_sum, 0) + n\n        max_sum = max(max_sum, cur_sum)\n    return max_sum",
     },
   },
+  "reverse-linked-list": {
+    templateType: "array-algorithm",
+    title: "Reverse Linked List",
+    subtitle: "LeetCode #206 • In-Place Pointer Reversal",
+    voiceoverText:
+      "To reverse a singly linked list in-place, we use three pointers: previous, current, and next. Starting with previous as null, in each iteration we save current next, point current back to previous, and advance our pointers forward. This reverses the entire chain in linear O(N) time with constant O(1) space.",
+    payload: {
+      array: [1, 2, 3, 4, 5],
+      target: 5,
+      algorithm: "reverse-linked-list",
+      problemNumber: 206,
+      difficulty: "Easy",
+      timeComplexity: "O(n)",
+      spaceComplexity: "O(1)",
+      code: "def reverseList(nums):\n    # Simulate pointer reversal over nodes\n    res = []\n    for i in range(len(nums) - 1, -1, -1):\n        res.append(nums[i])\n    return res",
+    },
+  },
+  "invert-binary-tree": {
+    templateType: "array-algorithm",
+    title: "Invert Binary Tree",
+    subtitle: "LeetCode #226 • Recursive DFS Subtree Swap",
+    voiceoverText:
+      "To invert a binary tree, we recursively swap the left and right children of every single node in the tree. If the current node is null, we return null. Otherwise, we swap its left and right subtrees, and recursively invert them. This visits every node once in linear O(N) time.",
+    payload: {
+      array: [4, 2, 7, 1, 3, 6, 9],
+      target: 4,
+      algorithm: "invert-binary-tree",
+      problemNumber: 226,
+      difficulty: "Easy",
+      timeComplexity: "O(n)",
+      spaceComplexity: "O(h)",
+      code: "def invertTree(nums):\n    # BFS level-order representation\n    inverted = [nums[0], nums[2], nums[1], nums[6], nums[5], nums[4], nums[3]]\n    return inverted",
+    },
+  },
 };
 
 function extractSlug(input: string): string {
@@ -196,7 +232,19 @@ Respond ONLY with valid JSON in this exact structure:
   return JSON.parse(rawText);
 }
 
-export async function createSolution(input: string, options: { render?: boolean; out?: string } = {}) {
+export interface CreateSolutionOptions {
+  render?: boolean;
+  out?: string;
+  voice?: string;
+  theme?: ReelTheme;
+  branding?: string;
+  brandingTag?: string;
+  gpu?: boolean;
+  social?: boolean;
+  sfx?: boolean;
+}
+
+export async function createSolution(input: string, options: CreateSolutionOptions = {}) {
   const slug = extractSlug(input);
   console.log(`\n🔍 Analyzing problem: "${input}" (slug: ${slug})`);
 
@@ -224,7 +272,7 @@ export async function createSolution(input: string, options: { render?: boolean;
   if (!finalProps) {
     if (BUILTIN_SOLUTIONS[slug]) {
       console.log(`📚 Using curated high-production solution from catalog.`);
-      finalProps = BUILTIN_SOLUTIONS[slug];
+      finalProps = { ...BUILTIN_SOLUTIONS[slug] };
     } else if (leetcodeData) {
       // Automatic heuristic extraction from LeetCode test cases
       console.log(`⚡ Auto-synthesizing solution from LeetCode test cases...`);
@@ -269,6 +317,19 @@ export async function createSolution(input: string, options: { render?: boolean;
     }
   }
 
+  // Channel Branding & Aesthetic Theme configuration
+  const brandName = options.branding || process.env.BRANDING_NAME || "RSquare";
+  const brandTag = options.brandingTag || process.env.BRANDING_TAG || "R²";
+  const resolvedTheme: ReelTheme = (options.theme || process.env.DEFAULT_THEME || "cyber") as ReelTheme;
+
+  finalProps.branding = {
+    name: brandName,
+    tag: brandTag,
+    handle: `@${brandName.toLowerCase()}`,
+  };
+  finalProps.theme = resolvedTheme;
+  finalProps.bgMusic = options.sfx !== false;
+
   // 4. Trace Python Execution
   const code = finalProps.payload?.code;
   const arr = finalProps.payload?.array || [2, 7, 11, 15];
@@ -301,10 +362,14 @@ export async function createSolution(input: string, options: { render?: boolean;
   }
 
   // 5. Generate Voiceover via ElevenLabs (Cached to public/voice)
+  const voiceChoice = options.voice || process.env.DEFAULT_VOICE || "adam";
   if (finalProps.voiceoverText) {
-    console.log(`\n🎙️ Synthesizing voiceover with ElevenLabs...`);
+    console.log(`\n🎙️ Synthesizing voiceover (${voiceChoice}) with ElevenLabs...`);
     try {
-      const tts = await generateTTS({ text: finalProps.voiceoverText });
+      const tts = await generateTTS({
+        text: finalProps.voiceoverText,
+        voiceId: voiceChoice,
+      });
       finalProps.audioFile = tts.audioFile;
       finalProps.audioDurationInSeconds = tts.durationInSeconds;
       finalProps.durationInFrames = Math.max(
@@ -334,10 +399,31 @@ export async function createSolution(input: string, options: { render?: boolean;
   const latestPath = path.join(process.cwd(), "out", "latest.json");
   fs.writeFileSync(latestPath, JSON.stringify(finalProps, null, 2), "utf-8");
 
+  // Auto-Social Exporter & Thumbnail Generator
+  if (options.social !== false) {
+    console.log(`\n📱 Exporting social media package & high-res thumbnail...`);
+    try {
+      const socialResult = exportSocialAssets({
+        slug,
+        props: finalProps,
+        propsPath: solutionPath,
+        generateThumbnail: true,
+      });
+      console.log(`📝 Ready-to-copy social post: ${socialResult.textPath}`);
+      if (socialResult.thumbnailPath) {
+        console.log(`🖼️  YouTube/IG Thumbnail:    ${socialResult.thumbnailPath}`);
+      }
+    } catch (socErr) {
+      console.warn(`[Social] Social exporter warning:`, socErr);
+    }
+  }
+
   console.log(`\n----------------------------------------`);
   console.log(`🎬 Title:       ${finalProps.title}`);
   console.log(`🏷️  Subtitle:    ${finalProps.subtitle}`);
-  console.log(`🎙️  Voiceover:   ${finalProps.voiceoverText}`);
+  console.log(`🎨 Theme:       ${finalProps.theme}`);
+  console.log(`🏷️  Branding:    ${finalProps.branding?.name} (${finalProps.branding?.tag})`);
+  console.log(`🎙️  Voice:       ${voiceChoice}`);
   console.log(`📊 Array:       [${finalProps.payload?.array?.join(", ")}]`);
   console.log(`🎯 Target:      ${finalProps.payload?.target}`);
   console.log(`⏱️  Complexity:  ${finalProps.payload?.timeComplexity} Time / ${finalProps.payload?.spaceComplexity} Space`);
@@ -347,41 +433,74 @@ export async function createSolution(input: string, options: { render?: boolean;
   const videoOut = path.join(videosDir, `${slug}.mp4`);
   if (options.render) {
     console.log(`\n🎥 Rendering video to ${videoOut}...`);
-    execSync(`npx remotion render AlgoMotion-Engine "${videoOut}" --props="${solutionPath}"`, {
-      stdio: "inherit",
-    });
+    // GPU Acceleration: NVIDIA RTX 3070 Ti detected; ANGLE + concurrency speeds up Chrome canvas
+    const useGpu = options.gpu !== false;
+    const gpuFlags = useGpu ? "--gl=angle --concurrency=4" : "";
+    const renderCmd = `npx remotion render AlgoMotion-Engine "${videoOut}" --props="${solutionPath}" ${gpuFlags}`.trim();
+    console.log(`⚡ Command: ${renderCmd}`);
+    execSync(renderCmd, { stdio: "inherit" });
     console.log(`🎉 Video rendered successfully to: ${videoOut}`);
   } else {
-    console.log(`\n💡 To render this video, run:`);
-    console.log(`   npx remotion render AlgoMotion-Engine "out/videos/${slug}.mp4" --props="${solutionPath}"`);
+    console.log(`\n💡 To render this video with GPU acceleration, run:`);
+    console.log(`   npx remotion render AlgoMotion-Engine "out/videos/${slug}.mp4" --props="${solutionPath}" --gl=angle --concurrency=4`);
     console.log(`   or preview in Studio: npm run dev\n`);
   }
 }
 
 // CLI entrypoint
 const args = process.argv.slice(2);
-if (args.length === 0) {
+if (args.length === 0 || args.includes("--help") || args.includes("-h")) {
+  const voiceList = Object.entries(CURATED_VOICES)
+    .map(([key, v]) => `${key} (${v.name} - ${v.gender})`)
+    .join(", ");
+
   console.log(`
+AlgoMotion Studio CLI
 Usage:
-  node scripts/generate.ts "<problem-name-or-url>" [options]
+  npx tsx scripts/generate.ts "<problem-name-or-url>" [options]
 
 Examples:
-  node scripts/generate.ts "Two Sum"
-  node scripts/generate.ts "https://leetcode.com/problems/3sum/"
-  node scripts/generate.ts "Best Time to Buy and Sell Stock" --render
+  npm run generate -- "Two Sum"
+  npm run generate -- "3Sum" --voice=rachel --theme=cyber --render
+  npm run generate -- "https://leetcode.com/problems/contains-duplicate/" --voice=george --theme=terminal
+  npm run generate -- "Best Time to Buy and Sell Stock" --branding="RSquare" --branding-tag="R²"
 
 Options:
-  --render     Automatically render video after creating solution
-  --out=<file> Custom props output path (default: out/solutions/<slug>.json)
+  --render             Automatically render video to out/videos/<slug>.mp4
+  --voice=<name>       Voice: ${voiceList}
+  --theme=<theme>      Visual Theme: cyber (default), terminal (retro matrix), minimal (clean modern)
+  --branding=<name>    Channel watermark name (default: "RSquare" or env BRANDING_NAME)
+  --branding-tag=<tag> Watermark badge/tag (default: "R²" or env BRANDING_TAG)
+  --gpu / --no-gpu     GPU acceleration (--gl=angle --concurrency=4, enabled by default)
+  --no-social          Skip auto-generating social post copy & thumbnail
+  --no-sfx             Disable background ambient audio & sound effects
+  --out=<file>         Custom props output path (default: out/solutions/<slug>.json)
 `);
   process.exit(0);
 }
 
 const inputArg = args[0];
 const shouldRender = args.includes("--render");
+const noGpu = args.includes("--no-gpu");
+const noSocial = args.includes("--no-social");
+const noSfx = args.includes("--no-sfx");
+const voiceArg = args.find((a) => a.startsWith("--voice="))?.split("=")[1];
+const themeArg = args.find((a) => a.startsWith("--theme="))?.split("=")[1] as ReelTheme | undefined;
+const brandingArg = args.find((a) => a.startsWith("--branding="))?.split("=")[1];
+const brandingTagArg = args.find((a) => a.startsWith("--branding-tag="))?.split("=")[1];
 const outArg = args.find((a) => a.startsWith("--out="))?.split("=")[1];
 
-createSolution(inputArg, { render: shouldRender, out: outArg }).catch((err) => {
+createSolution(inputArg, {
+  render: shouldRender,
+  out: outArg,
+  voice: voiceArg,
+  theme: themeArg,
+  branding: brandingArg,
+  brandingTag: brandingTagArg,
+  gpu: !noGpu,
+  social: !noSocial,
+  sfx: !noSfx,
+}).catch((err) => {
   console.error("Error creating solution:", err);
   process.exit(1);
 });

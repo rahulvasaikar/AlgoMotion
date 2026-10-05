@@ -1,21 +1,33 @@
 import React from "react";
 import { Audio } from "@remotion/media";
-import { staticFile, useCurrentFrame, useVideoConfig } from "remotion";
+import { Sequence, staticFile, useCurrentFrame, useVideoConfig } from "remotion";
 import type { AlgoMotionProps } from "./types";
 import { ArrayAlgorithm } from "./templates/ArrayAlgorithm";
 import { UIBreakdown } from "./templates/UIBreakdown";
 import { CodeExplainer } from "./templates/CodeExplainer";
+import { WatermarkOverlay } from "./components/primitives/WatermarkOverlay";
 
 export const UniversalReel: React.FC<AlgoMotionProps> = (props) => {
-  const { templateType, audioUrl, audioFile, captions } = props;
+  const {
+    templateType,
+    audioUrl,
+    audioFile,
+    captions,
+    branding,
+    bgMusic = true,
+    theme = "cyber",
+  } = props;
   const frame = useCurrentFrame();
-  const { fps } = useVideoConfig();
+  const { fps, durationInFrames } = useVideoConfig();
 
   // Find active caption if available
   const currentTimeMs = (frame / fps) * 1000;
   const currentCaption = captions?.find(
     (c) => currentTimeMs >= c.startMs && currentTimeMs <= c.endMs,
   );
+
+  // Outro phase starts around the last 22% of frames
+  const outroStartFrame = Math.max(0, durationInFrames - 85);
 
   const renderTemplate = () => {
     switch (templateType) {
@@ -46,19 +58,46 @@ export const UniversalReel: React.FC<AlgoMotionProps> = (props) => {
     }
   };
 
+  const themeClass =
+    theme === "terminal"
+      ? "theme-terminal"
+      : theme === "minimal"
+        ? "theme-minimal"
+        : "theme-cyber";
+
   return (
-    <div className="relative w-full h-full overflow-hidden">
-      {/* 1. Synchronous ElevenLabs Audio Playback */}
+    <div className={`relative w-full h-full overflow-hidden ${themeClass}`}>
+      {/* 1. Synchronous Narration Playback */}
       {audioFile ? (
         <Audio src={staticFile(audioFile)} />
       ) : audioUrl ? (
         <Audio src={audioUrl} />
       ) : null}
 
-      {/* 2. Dispatched Visual Archetype Component */}
+      {/* 2. Soft Ambient Background Music Bed (auto-ducked at 7% volume) */}
+      {bgMusic && (
+        <Audio
+          src={staticFile("audio/ambient_bed.wav")}
+          volume={0.07}
+          loop
+        />
+      )}
+
+      {/* 3. Victory Chime Audio Cue on Solution Outro */}
+      <Sequence from={outroStartFrame}>
+        <Audio
+          src={staticFile("audio/victory_chime.wav")}
+          volume={0.22}
+        />
+      </Sequence>
+
+      {/* 4. Dynamic Watermark & Channel Branding */}
+      <WatermarkOverlay branding={branding} />
+
+      {/* 5. Dispatched Visual Archetype Component */}
       {renderTemplate()}
 
-      {/* 3. Short-Form Dynamic Word Caption Overlay */}
+      {/* 6. Short-Form Dynamic Word Caption Overlay */}
       {currentCaption && (
         <div className="absolute bottom-[23rem] left-0 right-0 z-50 flex justify-center px-8 pointer-events-none">
           <div className="px-6 py-2.5 rounded-2xl bg-black/90 border border-amber-500/40 shadow-[0_0_35px_rgba(245,158,11,0.3)] backdrop-blur-md">

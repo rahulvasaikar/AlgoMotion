@@ -9,33 +9,63 @@ AlgoMotion transforms LeetCode problems, algorithm solutions, and system designs
 ## ✨ Features
 
 - 📱 **Universal Dispatcher Architecture:** Single composition dynamically routes and renders different visual archetypes (`array-algorithm`, `ui-breakdown`, `code-explainer`).
-- 🤖 **Auto-Solution Generator:** Pass any LeetCode URL or problem name (e.g., `npm run generate -- "Two Sum"`), and the engine fetches the problem, synthesizes the voiceover script, extracts inputs, and renders the video.
-- 🎙️ **Synchronous AI Voiceover:** ElevenLabs voiceover generation with automatic audio-duration measurement and word-level animated caption overlays.
-- 🎨 **Sleek Cyber Dark UI:** Polished 1080×1920 visuals with live pointers, real-time memory banks, glowing match connectors, and dynamic code inspection.
-- 📐 **Dynamic Timing:** Remotion's `calculateMetadata` dynamically scales composition frames to speech duration so videos are never cut off.
+- 🤖 **Auto-Solution Generator:** Pass any LeetCode URL or problem name (e.g., `npm run generate -- "Two Sum"`), and the engine fetches the problem, traces execution in Python, synthesizes voiceover, and renders the video.
+- 🌳 **Multi Data Structure Visualizers:** First-class visual primitives for **Arrays**, **Singly Linked Lists** (`[val | next] ➔ NULL`), and **Binary Trees** with SVG hierarchical edge connectors.
+- 🎙️ **Multi-Voice AI Narration:** Predefined ElevenLabs voices (Adam, Alice, Liam, George, Sarah, Jessica, Charlie) with automatic duration scaling and word-by-word animated captions.
+- 🎨 **Theme Engine:** Switch visual aesthetics dynamically:
+  - `cyber` (Default): Sleek neon cyber-dark with glowing accents.
+  - `terminal`: Retro matrix/cyberpunk monospaced terminal styling.
+  - `minimal`: Clean, modern, crisp monochromatic high-contrast UI.
+- 🏷️ **Dynamic Watermark & Branding:** Configurable channel badge (e.g. `"RSquare"` / `"R²"`) with dynamic pulse animation via env variables (`BRANDING_NAME`, `BRANDING_TAG`) or CLI.
+- 🎵 **Ambient Audio & SFX:** Layered background ambient pad with automatic speech ducking and victory audio chime on algorithm completion.
+- 📱 **Auto-Social Exporter & Thumbnail Generator:** Automatically produces ready-to-copy social post copy (`#leetcode`, hooks, complexities) and high-impact 1080×1920 thumbnail stills.
+- ⚡ **GPU-Accelerated Rendering:** Fast rendering powered by Chromium ANGLE and multi-core concurrency for NVIDIA RTX GPUs.
 
 ---
 
 ## 🚀 Quick Start
 
 ### 1. Configure Environment
-Copy the example environment file and add your ElevenLabs API credentials:
 ```bash
 cp .env.example .env
 ```
-
-### 2. Auto-Generate a Video from any LeetCode Problem
-```bash
-# Auto-generate props and immediately render the video:
-npm run generate -- "Two Sum" --render
-
-# Or pass a direct LeetCode link:
-npm run generate -- "https://leetcode.com/problems/3sum/" --render
+Key configuration parameters:
+```env
+ELEVENLABS_API_KEY=your_key
+DEFAULT_VOICE=adam          # adam, alice, liam, george, sarah, jessica, charlie
+DEFAULT_THEME=cyber         # cyber, terminal, minimal
+BRANDING_NAME=RSquare       # Your channel name
+BRANDING_TAG=R²             # Watermark badge
 ```
 
-### 3. Interactive Preview
-Open the Remotion Studio to scrub frames, edit props, and preview live:
+### 2. Auto-Generate Content
+```bash
+# Basic generation:
+npm run generate -- "Two Sum"
+
+# Full production with voice, theme, branding, and immediate GPU rendering:
+npm run generate -- "Reverse Linked List" --voice=alice --theme=terminal --render
+npm run generate -- "Invert Binary Tree" --voice=george --theme=minimal --render
+npm run generate -- "3Sum" --voice=liam --theme=cyber --branding="RSquare" --branding-tag="R²" --render
+```
+
+### 3. CLI Options
+| Flag | Description | Default |
+| :--- | :--- | :--- |
+| `--render` | Automatically render video to `out/videos/<slug>.mp4` | `false` |
+| `--voice=<name>` | ElevenLabs voice (`adam`, `alice`, `liam`, `george`, `sarah`, `jessica`, `charlie`) | `adam` |
+| `--theme=<theme>` | Visual theme (`cyber`, `terminal`, `minimal`) | `cyber` |
+| `--branding=<name>` | Watermark display name | `RSquare` |
+| `--branding-tag=<tag>` | Watermark badge | `R²` |
+| `--gpu` / `--no-gpu` | Hardware acceleration (`--gl=angle --concurrency=4`) | `true` |
+| `--no-social` | Disable social post copy and thumbnail generation | `false` |
+| `--no-sfx` | Disable background audio bed and chimes | `false` |
+| `--out=<path>` | Custom props JSON output path | `out/solutions/<slug>.json` |
+
+### 4. Interactive Preview in Studio
 ```bash
 npm run dev
 ```
+Open `http://localhost:3000` to scrub through frames, inspect memory states, and fine-tune timings in real time.
+
 

@@ -69,6 +69,70 @@ function alignmentToTranscript(alignment: AlignmentData) {
   return { language_code: "en", words };
 }
 
+export const CURATED_VOICES: Record<
+  string,
+  { id: string; name: string; gender: "male" | "female"; description: string }
+> = {
+  adam: {
+    id: "pNInz6obpgDQGcFmaJgB",
+    name: "Adam",
+    gender: "male",
+    description: "Deep, firm tech narrative voice (default)",
+  },
+  alice: {
+    id: "Xb7hH8MSUJpSbSDYk0k2",
+    name: "Alice",
+    gender: "female",
+    description: "Clear, engaging educator (female)",
+  },
+  liam: {
+    id: "TX3LPaxmHKxFdv7VOQHJ",
+    name: "Liam",
+    gender: "male",
+    description: "Energetic social media creator (male)",
+  },
+  george: {
+    id: "JBFqnCBsd6RMkjVDRZzb",
+    name: "George",
+    gender: "male",
+    description: "Warm, articulate narrator (male)",
+  },
+  sarah: {
+    id: "EXAVITQu4vr4xnSDxMaL",
+    name: "Sarah",
+    gender: "female",
+    description: "Mature, confident narrator (female)",
+  },
+  jessica: {
+    id: "cgSgspJ2msm6clMCkdW9",
+    name: "Jessica",
+    gender: "female",
+    description: "Bright, playful, upbeat voice (female)",
+  },
+  charlie: {
+    id: "IKne3meq5aSn9XLyUdCD",
+    name: "Charlie",
+    gender: "male",
+    description: "Deep, energetic, confident male voice",
+  },
+};
+
+export function resolveVoiceId(voiceKeyOrId?: string): string {
+  if (!voiceKeyOrId) {
+    const envDefault = process.env.DEFAULT_VOICE?.toLowerCase().trim();
+    if (envDefault && CURATED_VOICES[envDefault]) {
+      return CURATED_VOICES[envDefault].id;
+    }
+    return process.env.ELEVENLABS_VOICE_ID || CURATED_VOICES.adam.id;
+  }
+
+  const key = voiceKeyOrId.toLowerCase().trim();
+  if (CURATED_VOICES[key]) {
+    return CURATED_VOICES[key].id;
+  }
+  return voiceKeyOrId;
+}
+
 export async function generateTTS({
   text,
   voiceId,
@@ -78,8 +142,7 @@ export async function generateTTS({
   voiceId?: string;
   apiKey?: string;
 }): Promise<TTSResult> {
-  const resolvedVoiceId =
-    voiceId || process.env.ELEVENLABS_VOICE_ID || "pNInz6obpgDQGcFmaJgB";
+  const resolvedVoiceId = resolveVoiceId(voiceId);
   const resolvedApiKey = apiKey || process.env.ELEVENLABS_API_KEY;
 
   const hash = crypto
@@ -143,14 +206,37 @@ export async function generateTTS({
     },
   );
 
-  if (!response.ok) {
-    const errorText = await response.text();
-    throw new Error(
-      `ElevenLabs API failed with status ${response.status}: ${errorText}`,
+  let actualResponse = response;
+  if (!actualResponse.ok && (actualResponse.status === 402 || actualResponse.status === 400) && resolvedVoiceId !== CURATED_VOICES.adam.id) {
+    console.warn(`[TTS] Voice ${resolvedVoiceId} failed with status ${actualResponse.status}. Retrying with default Adam voice...`);
+    actualResponse = await fetch(
+      `https://api.elevenlabs.io/v1/text-to-speech/${CURATED_VOICES.adam.id}/with-timestamps`,
+      {
+        method: "POST",
+        headers: {
+          "xi-api-key": resolvedApiKey,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          text,
+          model_id: "eleven_multilingual_v2",
+          voice_settings: {
+            stability: 0.5,
+            similarity_boost: 0.75,
+          },
+        }),
+      },
     );
   }
 
-  const data = (await response.json()) as {
+  if (!actualResponse.ok) {
+    const errorText = await actualResponse.text();
+    throw new Error(
+      `ElevenLabs API failed with status ${actualResponse.status}: ${errorText}`,
+    );
+  }
+
+  const data = (await actualResponse.json()) as {
     audio_base64: string;
     alignment?: AlignmentData;
   };

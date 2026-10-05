@@ -1,1 +1,32 @@
 @import "tailwindcss";
+
+/* ------------------------------------------------------------- */
+/* Visual Themes                                                 */
+/* ------------------------------------------------------------- */
+
+/* 1. Cyber (Default): Deep indigo & cyber cyan neon glow */
+.theme-cyber {
+  --theme-bg: #070b14;
+  --theme-accent: #06b6d4;
+  --theme-card-bg: rgba(15, 23, 42, 0.85);
+}
+
+/* 2. Terminal: Retro Hacker / CRT Monospace Green matrix */
+.theme-terminal {
+  --theme-bg: #030a05;
+  --theme-accent: #22c55e;
+  --theme-card-bg: rgba(5, 20, 10, 0.9);
+  filter: contrast(1.05) saturate(1.1);
+}
+
+.theme-terminal * {
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace !important;
+}
+
+/* 3. Minimal: Clean Apple/Linear Obsidian Titanium monochrome */
+.theme-minimal {
+  --theme-bg: #000000;
+  --theme-accent: #f8fafc;
+  --theme-card-bg: rgba(18, 18, 18, 0.9);
+  filter: grayscale(0.2);
+}

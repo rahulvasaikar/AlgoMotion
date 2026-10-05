@@ -7,6 +7,8 @@ import {
 } from "remotion";
 import type { AlgoMotionProps, ArrayAlgorithmPayload, TraceStep } from "../types";
 import { ArrayTrack } from "../components/primitives/ArrayTrack";
+import { LinkedListTrack } from "../components/primitives/LinkedListTrack";
+import { BinaryTreeView } from "../components/primitives/BinaryTreeView";
 import { MemoryBank } from "../components/primitives/MemoryBank";
 import { VariableDashboard } from "../components/primitives/VariableDashboard";
 import { CodeViewer } from "../components/primitives/CodeViewer";
@@ -313,6 +315,30 @@ export const ArrayAlgorithm: React.FC<AlgoMotionProps> = ({
                   Hash Set O(1) Lookups vs O(N²) Brute Force
                 </div>
               </div>
+            ) : data.algorithm?.includes("linked-list") ? (
+              <div className="flex flex-col items-center justify-center gap-3 py-6 bg-slate-950/70 rounded-2xl border border-slate-800 text-center px-4">
+                <span className="text-xs uppercase font-bold tracking-widest text-slate-500">
+                  Singly Linked List Inversion:
+                </span>
+                <span className="text-xl font-mono font-black text-cyan-300">
+                  prev ➔ curr ➔ curr.next
+                </span>
+                <div className="px-4 py-2 rounded-xl bg-indigo-500/10 border border-indigo-500/30 text-indigo-300 text-xs font-mono font-bold">
+                  In-Place Three Pointer Reversal • O(1) Memory
+                </div>
+              </div>
+            ) : data.algorithm?.includes("tree") ? (
+              <div className="flex flex-col items-center justify-center gap-3 py-6 bg-slate-950/70 rounded-2xl border border-slate-800 text-center px-4">
+                <span className="text-xs uppercase font-bold tracking-widest text-slate-500">
+                  Binary Tree Inversion:
+                </span>
+                <span className="text-xl font-mono font-black text-emerald-300">
+                  node.left, node.right = node.right, node.left
+                </span>
+                <div className="px-4 py-2 rounded-xl bg-emerald-500/10 border border-emerald-500/30 text-emerald-300 text-xs font-mono font-bold">
+                  Recursive Subtree DFS Inversion • O(N) Time
+                </div>
+              </div>
             ) : (
               <div className="flex flex-col items-center justify-center gap-3 py-6 bg-slate-950/70 rounded-2xl border border-slate-800 text-center px-4">
                 <span className="text-xs uppercase font-bold tracking-widest text-slate-500">
@@ -338,14 +364,27 @@ export const ArrayAlgorithm: React.FC<AlgoMotionProps> = ({
         ) : (
           /* PHASE 2 & 3: TRACE-DRIVEN SIMULATION */
           <div className="flex flex-col gap-5">
-            {/* Primary Array Track */}
-            <ArrayTrack
-              values={data.array}
-              pointers={activeStep?.pointers ?? {}}
-              activeIndices={activeIndices}
-              matchIndices={isOutroPhase ? matchIndices : []}
-              label="Input Array State"
-            />
+            {/* Primary Data Structure Visualizer (Array, Linked List, or Binary Tree) */}
+            {data.algorithm?.includes("linked-list") ? (
+              <LinkedListTrack
+                nodes={data.array}
+                pointers={activeStep?.pointers ?? {}}
+                activeIndices={activeIndices}
+              />
+            ) : data.algorithm?.includes("tree") ? (
+              <BinaryTreeView
+                nodes={data.array}
+                pointers={activeStep?.pointers ?? {}}
+              />
+            ) : (
+              <ArrayTrack
+                values={data.array}
+                pointers={activeStep?.pointers ?? {}}
+                activeIndices={activeIndices}
+                matchIndices={isOutroPhase ? matchIndices : []}
+                label="Input Array State"
+              />
+            )}
 
             {/* Live Scalar Variables Dashboard */}
             {activeStep?.scalars && (
