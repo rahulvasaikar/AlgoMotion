@@ -1,6 +1,8 @@
 # Dependencies
 node_modules
 dist
+build
+.cache
 
 # OS files
 .DS_Store
@@ -20,6 +22,9 @@ out
 .remotion
 public/voice
 sample-props.json
+test.wav
+*.wav
+!public/audio/*.wav
 
 # Logs
 npm-debug.log*

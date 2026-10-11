@@ -3,6 +3,9 @@ import React from "react";
 import { CalculateMetadataFunction, Composition } from "remotion";
 import { UniversalReel } from "./UniversalReel";
 import type { AlgoMotionProps } from "./types";
+import { loadFont as loadPatrickHand } from "@remotion/google-fonts/PatrickHand";
+
+loadPatrickHand();
 
 const defaultProps: AlgoMotionProps = {
   templateType: "array-algorithm",
@@ -63,17 +66,64 @@ export const calculateMetadata: CalculateMetadataFunction<AlgoMotionProps> =
     };
   };
 
+const defaultYouTubeProps: AlgoMotionProps = {
+  platform: "youtube",
+  templateType: "youtube-deep-dive",
+  title: "Two Sum",
+  subtitle: "LeetCode #1 • Complete Intuition & Approaches Deep Dive",
+  voiceoverText:
+    "Welcome to the comprehensive breakdown of Two Sum. We explore three distinct approaches: first the brute force nested loops at O(N squared), then the sorted two-pointer paradigm, and finally the optimal single-pass hash map running in linear O(N) time with instant complement lookups.",
+  payload: defaultProps.payload,
+  branding: {
+    name: "RSquare",
+    tag: "R²",
+    handle: "@rsquare",
+  },
+};
+
 export const RemotionRoot: React.FC = () => {
   return (
-    <Composition
-      id="AlgoMotion-Engine"
-      component={UniversalReel}
-      durationInFrames={300}
-      fps={30}
-      width={1080}
-      height={1920}
-      defaultProps={defaultProps}
-      calculateMetadata={calculateMetadata}
-    />
+    <>
+      {/* 1. Instagram Reel / TikTok / YouTube Shorts (9:16 Vertical) */}
+      <Composition
+        id="AlgoMotion-Engine"
+        component={UniversalReel}
+        durationInFrames={300}
+        fps={30}
+        width={1080}
+        height={1920}
+        defaultProps={defaultProps}
+        calculateMetadata={calculateMetadata}
+      />
+
+      {/* 2. YouTube Long-Form Deep Dive (16:9 Landscape Widescreen) */}
+      <Composition
+        id="AlgoMotion-YouTube"
+        component={UniversalReel}
+        durationInFrames={450}
+        fps={30}
+        width={1920}
+        height={1080}
+        defaultProps={defaultYouTubeProps}
+        calculateMetadata={calculateMetadata}
+      />
+
+      {/* 3. System Design Architecture Deep Dive (16:9 Landscape Widescreen) */}
+      <Composition
+        id="AlgoMotion-SystemDesign"
+        component={UniversalReel}
+        durationInFrames={450}
+        fps={30}
+        width={1920}
+        height={1080}
+        defaultProps={{
+          ...defaultYouTubeProps,
+          templateType: "system-design",
+          title: "Design TinyURL (URL Shortener)",
+          subtitle: "System Design • 100M DAU • Base62 Key-Gen & Redis Caching",
+        }}
+        calculateMetadata={calculateMetadata}
+      />
+    </>
   );
 };

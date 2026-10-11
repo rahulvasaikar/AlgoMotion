@@ -19,7 +19,7 @@ interface LeetCodeQuestion {
 }
 
 // Built-in curated solution catalog for instant generation without any LLM key
-const BUILTIN_SOLUTIONS: Record<string, any> = {
+export const BUILTIN_SOLUTIONS: Record<string, any> = {
   "two-sum": {
     templateType: "array-algorithm",
     title: "Two Sum",
@@ -119,7 +119,7 @@ const BUILTIN_SOLUTIONS: Record<string, any> = {
       difficulty: "Easy",
       timeComplexity: "O(n)",
       spaceComplexity: "O(1)",
-      code: "def reverseList(nums):\n    # Simulate pointer reversal over nodes\n    res = []\n    for i in range(len(nums) - 1, -1, -1):\n        res.append(nums[i])\n    return res",
+      code: "def reverseList(nums):\n    prev = -1\n    curr = 0\n    while curr < len(nums):\n        nxt = curr + 1\n        curr = nxt\n        prev += 1\n    nums.reverse()\n    return nums",
     },
   },
   "invert-binary-tree": {
@@ -127,7 +127,7 @@ const BUILTIN_SOLUTIONS: Record<string, any> = {
     title: "Invert Binary Tree",
     subtitle: "LeetCode #226 • Recursive DFS Subtree Swap",
     voiceoverText:
-      "To invert a binary tree, we recursively swap the left and right children of every single node in the tree. If the current node is null, we return null. Otherwise, we swap its left and right subtrees, and recursively invert them. This visits every node once in linear O(N) time.",
+      "To invert a binary tree, we recursively swap the left and right children of every single node in the tree. [STEP=6] We start at the root node, and swap its left and right subtrees. [STEP=10] We add the children to our queue. [STEP=21] We then pop the next node, and swap its children as well. [STEP=40] We continue this process level by level until the queue is empty. [STEP=46] This visits every node once in linear O(N) time.",
     payload: {
       array: [4, 2, 7, 1, 3, 6, 9],
       target: 4,
@@ -136,12 +136,12 @@ const BUILTIN_SOLUTIONS: Record<string, any> = {
       difficulty: "Easy",
       timeComplexity: "O(n)",
       spaceComplexity: "O(h)",
-      code: "def invertTree(nums):\n    # BFS level-order representation\n    inverted = [nums[0], nums[2], nums[1], nums[6], nums[5], nums[4], nums[3]]\n    return inverted",
+      code: "def invertTree(nums):\n    queue = [0]\n    while queue:\n        curr = queue.pop(0)\n        left = 2 * curr + 1\n        right = 2 * curr + 2\n        if left < len(nums) and right < len(nums):\n            nums[left], nums[right] = nums[right], nums[left]\n            queue.append(left)\n            queue.append(right)\n    return nums",
     },
   },
 };
 
-function extractSlug(input: string): string {
+export function extractSlug(input: string): string {
   const trimmed = input.trim();
   // Check if it's a LeetCode URL
   const urlMatch = trimmed.match(/leetcode\.com\/problems\/([^/?#]+)/i);
@@ -155,7 +155,7 @@ function extractSlug(input: string): string {
     .replace(/^-+|-+$/g, "");
 }
 
-async function fetchLeetCodeData(slug: string): Promise<LeetCodeQuestion | null> {
+export async function fetchLeetCodeData(slug: string): Promise<LeetCodeQuestion | null> {
   const query = `
     query getQuestionDetail($titleSlug: String!) {
       question(titleSlug: $titleSlug) {
@@ -186,7 +186,7 @@ async function fetchLeetCodeData(slug: string): Promise<LeetCodeQuestion | null>
   }
 }
 
-async function generateWithGemini(
+export async function generateWithGemini(
   problem: LeetCodeQuestion,
   apiKey: string,
 ): Promise<any> {
@@ -242,6 +242,7 @@ export interface CreateSolutionOptions {
   gpu?: boolean;
   social?: boolean;
   sfx?: boolean;
+  platform?: "instagram" | "youtube";
 }
 
 export async function createSolution(input: string, options: CreateSolutionOptions = {}) {
@@ -377,6 +378,9 @@ export async function createSolution(input: string, options: CreateSolutionOptio
         Math.ceil(tts.durationInSeconds * 30) + 30,
       );
       finalProps.captions = tts.captions;
+      if (tts.syncMarkers && tts.syncMarkers.length > 0) {
+        finalProps.syncMarkers = tts.syncMarkers;
+      }
       console.log(
         `🎧 Voiceover ready: ${tts.audioFile || "none"} (${tts.durationInSeconds.toFixed(2)}s, ${finalProps.durationInFrames} frames)`,
       );
@@ -409,9 +413,13 @@ export async function createSolution(input: string, options: CreateSolutionOptio
         propsPath: solutionPath,
         generateThumbnail: true,
       });
-      console.log(`📝 Ready-to-copy social post: ${socialResult.textPath}`);
-      if (socialResult.thumbnailPath) {
-        console.log(`🖼️  YouTube/IG Thumbnail:    ${socialResult.thumbnailPath}`);
+      console.log(`📱 Ready-to-copy Reel post:    ${socialResult.socialTextPath}`);
+      console.log(`📺 Ready-to-copy YouTube SEO:  ${socialResult.youtubeTextPath}`);
+      if (socialResult.reelThumbPath) {
+        console.log(`🖼️  9:16 Reel Thumbnail:       ${socialResult.reelThumbPath}`);
+      }
+      if (socialResult.ytThumbPath) {
+        console.log(`🖼️  16:9 YouTube Thumbnail:    ${socialResult.ytThumbPath}`);
       }
     } catch (socErr) {
       console.warn(`[Social] Social exporter warning:`, socErr);
@@ -429,27 +437,34 @@ export async function createSolution(input: string, options: CreateSolutionOptio
   console.log(`⏱️  Complexity:  ${finalProps.payload?.timeComplexity} Time / ${finalProps.payload?.spaceComplexity} Space`);
   console.log(`----------------------------------------`);
 
-  // 7. If --render is passed, render to out/videos/<slug>.mp4
-  const videoOut = path.join(videosDir, `${slug}.mp4`);
+  // 7. If --render is passed, render video
+  const isYouTube = options.platform === "youtube";
+  const compositionId = isYouTube ? "AlgoMotion-YouTube" : "AlgoMotion-Engine";
+  const videoOut = path.join(videosDir, `${slug}-${isYouTube ? "youtube" : "reel"}.mp4`);
   if (options.render) {
-    console.log(`\n🎥 Rendering video to ${videoOut}...`);
+    console.log(`\n🎥 Rendering ${isYouTube ? "YouTube 16:9" : "Instagram 9:16"} video to ${videoOut}...`);
     // GPU Acceleration: NVIDIA RTX 3070 Ti detected; ANGLE + concurrency speeds up Chrome canvas
     const useGpu = options.gpu !== false;
     const gpuFlags = useGpu ? "--gl=angle --concurrency=4" : "";
-    const renderCmd = `npx remotion render AlgoMotion-Engine "${videoOut}" --props="${solutionPath}" ${gpuFlags}`.trim();
+    const renderCmd = `npx remotion render ${compositionId} "${videoOut}" --props="${solutionPath}" ${gpuFlags}`.trim();
     console.log(`⚡ Command: ${renderCmd}`);
     execSync(renderCmd, { stdio: "inherit" });
     console.log(`🎉 Video rendered successfully to: ${videoOut}`);
   } else {
     console.log(`\n💡 To render this video with GPU acceleration, run:`);
-    console.log(`   npx remotion render AlgoMotion-Engine "out/videos/${slug}.mp4" --props="${solutionPath}" --gl=angle --concurrency=4`);
+    console.log(`   npx remotion render ${compositionId} "${videoOut}" --props="${solutionPath}" --gl=angle --concurrency=4`);
     console.log(`   or preview in Studio: npm run dev\n`);
   }
 }
 
-// CLI entrypoint
-const args = process.argv.slice(2);
-if (args.length === 0 || args.includes("--help") || args.includes("-h")) {
+// CLI entrypoint (only run when executed directly via CLI)
+const isMain =
+  process.argv[1] &&
+  (process.argv[1].endsWith("generate.ts") || process.argv[1].endsWith("generate.js"));
+
+if (isMain) {
+  const args = process.argv.slice(2);
+  if (args.length === 0 || args.includes("--help") || args.includes("-h")) {
   const voiceList = Object.entries(CURATED_VOICES)
     .map(([key, v]) => `${key} (${v.name} - ${v.gender})`)
     .join(", ");
@@ -490,17 +505,19 @@ const brandingArg = args.find((a) => a.startsWith("--branding="))?.split("=")[1]
 const brandingTagArg = args.find((a) => a.startsWith("--branding-tag="))?.split("=")[1];
 const outArg = args.find((a) => a.startsWith("--out="))?.split("=")[1];
 
-createSolution(inputArg, {
-  render: shouldRender,
-  out: outArg,
-  voice: voiceArg,
-  theme: themeArg,
-  branding: brandingArg,
-  brandingTag: brandingTagArg,
-  gpu: !noGpu,
-  social: !noSocial,
-  sfx: !noSfx,
-}).catch((err) => {
-  console.error("Error creating solution:", err);
-  process.exit(1);
-});
+  createSolution(inputArg, {
+    render: shouldRender,
+    out: outArg,
+    voice: voiceArg,
+    theme: themeArg,
+    branding: brandingArg,
+    brandingTag: brandingTagArg,
+    gpu: !noGpu,
+    social: !noSocial,
+    sfx: !noSfx,
+  }).catch((err) => {
+    console.error("Error creating solution:", err);
+    process.exit(1);
+  });
+}
+

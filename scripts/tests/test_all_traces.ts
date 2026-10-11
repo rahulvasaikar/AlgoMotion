@@ -1,4 +1,4 @@
-import { traceExecution } from "./trace.ts";
+import { traceExecution } from "../pipeline/trace.ts";
 
 async function run() {
   const cases = [

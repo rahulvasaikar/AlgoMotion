@@ -5,11 +5,14 @@ import type { AlgoMotionProps } from "./types";
 import { ArrayAlgorithm } from "./templates/ArrayAlgorithm";
 import { UIBreakdown } from "./templates/UIBreakdown";
 import { CodeExplainer } from "./templates/CodeExplainer";
+import { YouTubeDeepDive } from "./templates/YouTubeDeepDive";
+import { SystemDesignExplainer } from "./templates/SystemDesignExplainer";
 import { WatermarkOverlay } from "./components/primitives/WatermarkOverlay";
 
 export const UniversalReel: React.FC<AlgoMotionProps> = (props) => {
   const {
     templateType,
+    platform,
     audioUrl,
     audioFile,
     captions,
@@ -18,7 +21,12 @@ export const UniversalReel: React.FC<AlgoMotionProps> = (props) => {
     theme = "cyber",
   } = props;
   const frame = useCurrentFrame();
-  const { fps, durationInFrames } = useVideoConfig();
+  const { fps, durationInFrames, width, height } = useVideoConfig();
+
+  const isYouTubeMode =
+    platform === "youtube" ||
+    templateType === "youtube-deep-dive" ||
+    (width === 1920 && height === 1080);
 
   // Find active caption if available
   const currentTimeMs = (frame / fps) * 1000;
@@ -30,9 +38,19 @@ export const UniversalReel: React.FC<AlgoMotionProps> = (props) => {
   const outroStartFrame = Math.max(0, durationInFrames - 85);
 
   const renderTemplate = () => {
+    if (templateType === "system-design") {
+      return <SystemDesignExplainer {...props} />;
+    }
+
+    if (isYouTubeMode) {
+      return <YouTubeDeepDive {...props} />;
+    }
+
     switch (templateType) {
       case "array-algorithm":
         return <ArrayAlgorithm {...props} />;
+      case "system-design":
+        return <SystemDesignExplainer {...props} />;
       case "ui-breakdown":
         return <UIBreakdown {...props} />;
       case "code-explainer":
@@ -63,7 +81,9 @@ export const UniversalReel: React.FC<AlgoMotionProps> = (props) => {
       ? "theme-terminal"
       : theme === "minimal"
         ? "theme-minimal"
-        : "theme-cyber";
+        : theme === "handwritten"
+          ? "theme-handwritten"
+          : "theme-cyber";
 
   return (
     <div className={`relative w-full h-full overflow-hidden ${themeClass}`}>

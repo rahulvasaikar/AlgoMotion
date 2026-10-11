@@ -69,7 +69,7 @@ class ExecutionTracer:
                     data_structures[k] = {"type": "set", "items": self.serialize_val(v)}
 
             # Pointer names heuristic
-            pointer_names = {"i", "j", "k", "l", "r", "left", "right", "mid", "start", "end", "low", "high", "idx", "p", "ptr"}
+            pointer_names = {"i", "j", "k", "l", "r", "left", "right", "mid", "start", "end", "low", "high", "idx", "p", "ptr", "curr", "prev", "nxt"}
             for k, v in frame.f_locals.items():
                 if k.startswith("_"):
                     continue

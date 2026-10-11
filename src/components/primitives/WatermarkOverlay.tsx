@@ -9,8 +9,12 @@ export interface WatermarkOverlayProps {
 export const WatermarkOverlay: React.FC<WatermarkOverlayProps> = ({ branding }) => {
   const frame = useCurrentFrame();
 
-  const name = branding?.name || process.env.BRANDING_NAME || "RSquare";
-  const tag = branding?.tag || process.env.BRANDING_TAG || "R²";
+  const envName =
+    typeof process !== "undefined" && process.env ? process.env.BRANDING_NAME : undefined;
+  const envTag =
+    typeof process !== "undefined" && process.env ? process.env.BRANDING_TAG : undefined;
+  const name = branding?.name || envName || "RSquare";
+  const tag = branding?.tag || envTag || "R²";
   const handle = branding?.handle || (name ? `@${name.toLowerCase()}` : undefined);
 
   // Soft pulsing breathing glow driven purely by Remotion frame

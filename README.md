@@ -62,10 +62,25 @@ npm run generate -- "3Sum" --voice=liam --theme=cyber --branding="RSquare" --bra
 | `--no-sfx` | Disable background audio bed and chimes | `false` |
 | `--out=<path>` | Custom props JSON output path | `out/solutions/<slug>.json` |
 
-### 4. Interactive Preview in Studio
+### 4. Interactive Studio Web UI
+Launch the interactive web application dashboard:
+```bash
+npm run ui
+```
+Open [http://localhost:3300](http://localhost:3300) in your browser:
+- 📱 **Real-time Remotion Player:** Live 9:16 vertical canvas with scrubbing, playback speed, and loop controls powered by `@remotion/player`.
+- 🔍 **Step-by-step Trace Visualizer:** Scrub through every step of Python execution, inspect active code lines, pointers, and hash maps in real time.
+- ⚡ **1-Click Generation:** Fetch LeetCode problems or select curated presets (`Two Sum`, `3Sum`, `Invert Tree`, `Kadane`, etc.).
+- 🎙️ **AI Voiceover Studio:** Select voice personas, write scripts, and synthesize audio with automatic duration scaling and Whisper sync markers.
+- 🎨 **Visual Themes & Branding:** Switch between Cyber Neon, Retro Terminal, Minimal Monochrome, and Handwritten themes live.
+- 🎥 **GPU Render Action:** Trigger GPU-accelerated video renders directly from the browser UI with live progress indicators.
+- 📱 **Social Export & Gallery:** Copy ready-to-post hashtags & hooks, download high-res thumbnails, and browse past creations.
+
+### 5. Remotion Studio (Low-level Dev Tool)
 ```bash
 npm run dev
 ```
-Open `http://localhost:3000` to scrub through frames, inspect memory states, and fine-tune timings in real time.
+Open `http://localhost:3000` to inspect raw compositions in Remotion Studio.
+
 
 

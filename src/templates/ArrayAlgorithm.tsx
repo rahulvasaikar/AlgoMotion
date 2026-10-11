@@ -17,7 +17,20 @@ export const ArrayAlgorithm: React.FC<AlgoMotionProps> = ({
   title,
   subtitle,
   payload,
+  ...props
 }) => {
+  const { theme = "light" } = props;
+  const isLight = theme === "light";
+  const themeClass = isLight
+    ? "theme-light"
+    : theme === "terminal"
+    ? "theme-terminal"
+    : theme === "minimal"
+    ? "theme-minimal"
+    : theme === "handwritten"
+    ? "theme-handwritten"
+    : "theme-cyber";
+
   const frame = useCurrentFrame();
   const { fps, durationInFrames } = useVideoConfig();
 
@@ -126,15 +139,51 @@ export const ArrayAlgorithm: React.FC<AlgoMotionProps> = ({
 
   const isIntroPhase = frame < introDuration;
   const isOutroPhase = frame >= durationInFrames - outroDuration;
+  const syncMarkers = props.syncMarkers;
 
-  const currentStepIndex = isIntroPhase
-    ? -1
-    : isOutroPhase
-      ? steps.length - 1
-      : Math.min(
-          steps.length - 1,
-          Math.floor((frame - introDuration) / stepDuration),
-        );
+  const currentStepIndex = useMemo(() => {
+    if (isIntroPhase) return -1;
+    if (isOutroPhase) return steps.length - 1;
+
+    if (syncMarkers && syncMarkers.length > 0) {
+      let prevMarker = { frame: introDuration, stepIndex: 0 };
+      let nextMarker = { frame: durationInFrames - outroDuration, stepIndex: steps.length - 1 };
+
+      for (const m of syncMarkers) {
+        if (frame >= m.frame) {
+          prevMarker = m;
+        } else {
+          nextMarker = m;
+          break;
+        }
+      }
+
+      const frameRange = Math.max(1, nextMarker.frame - prevMarker.frame);
+      const stepRange = Math.max(0, nextMarker.stepIndex - prevMarker.stepIndex);
+
+      if (stepRange === 0) return prevMarker.stepIndex;
+
+      const progress = (frame - prevMarker.frame) / frameRange;
+      const step = prevMarker.stepIndex + Math.floor(progress * stepRange);
+      return Math.min(steps.length - 1, step);
+    }
+
+    // Fallback uniform time division
+    return Math.min(
+      steps.length - 1,
+      Math.floor((frame - introDuration) / stepDuration)
+    );
+  }, [
+    frame,
+    isIntroPhase,
+    isOutroPhase,
+    steps.length,
+    introDuration,
+    outroDuration,
+    durationInFrames,
+    stepDuration,
+    syncMarkers,
+  ]);
 
   const activeStep: TraceStep | null =
     currentStepIndex >= 0 ? steps[currentStepIndex] : null;
@@ -169,6 +218,25 @@ export const ArrayAlgorithm: React.FC<AlgoMotionProps> = ({
     return undefined;
   }, [activeStep]);
 
+  const activeArrayValues = useMemo(() => {
+    const nums = activeStep?.dataStructures?.nums;
+    if (nums?.type === "array" && nums.values) return nums.values as (number | string)[];
+    const head = activeStep?.dataStructures?.head;
+    if (head?.type === "array" && head.values) return head.values as (number | string)[];
+    
+    if (!activeStep?.dataStructures) return data.array;
+    for (const [key, val] of Object.entries(activeStep.dataStructures)) {
+      if (key !== "queue" && val.type === "array" && "values" in val && val.values) return val.values as (number | string)[];
+    }
+    return data.array;
+  }, [activeStep, data.array]);
+
+  const activeQueueValues = useMemo(() => {
+    const queue = activeStep?.dataStructures?.queue;
+    if (queue?.type === "array" && queue.values) return queue.values as (number | string)[];
+    return undefined;
+  }, [activeStep]);
+
   // Highlighted indices from solution if array indices
   const matchIndices = useMemo(() => {
     if (Array.isArray(solution) && solution.length > 0 && typeof solution[0] === "number") {
@@ -183,18 +251,34 @@ export const ArrayAlgorithm: React.FC<AlgoMotionProps> = ({
   }, [activeStep]);
 
   return (
-    <div className="relative w-full h-full bg-[#070b14] text-white flex flex-col justify-between p-8 font-sans overflow-hidden select-none">
+    <div
+      className={`relative w-full h-full ${
+        isLight ? "bg-white text-slate-900" : "bg-[#070b14] text-white"
+      } flex flex-col justify-between p-8 font-sans overflow-hidden select-none ${themeClass}`}
+    >
       {/* Background Ambient Glows */}
-      <div className="absolute -top-32 -left-32 w-[420px] h-[420px] bg-indigo-600/20 rounded-full blur-[140px] pointer-events-none" />
-      <div className="absolute top-1/3 -right-32 w-[450px] h-[450px] bg-cyan-600/15 rounded-full blur-[150px] pointer-events-none" />
-      <div className="absolute -bottom-24 left-1/3 w-[500px] h-[500px] bg-emerald-600/15 rounded-full blur-[160px] pointer-events-none" />
+      {!isLight ? (
+        <>
+          <div className="absolute -top-32 -left-32 w-[420px] h-[420px] bg-indigo-600/20 rounded-full blur-[140px] pointer-events-none" />
+          <div className="absolute top-1/3 -right-32 w-[450px] h-[450px] bg-cyan-600/15 rounded-full blur-[150px] pointer-events-none" />
+          <div className="absolute -bottom-24 left-1/3 w-[500px] h-[500px] bg-emerald-600/15 rounded-full blur-[160px] pointer-events-none" />
+        </>
+      ) : (
+        <>
+          <div className="absolute -top-32 -left-32 w-[420px] h-[420px] bg-sky-200/40 rounded-full blur-[120px] pointer-events-none" />
+          <div className="absolute top-1/3 -right-32 w-[450px] h-[450px] bg-indigo-100/50 rounded-full blur-[130px] pointer-events-none" />
+          <div className="absolute -bottom-24 left-1/3 w-[500px] h-[500px] bg-emerald-100/40 rounded-full blur-[140px] pointer-events-none" />
+        </>
+      )}
 
       {/* Cyber Grid Texture */}
       <div
-        className="absolute inset-0 opacity-[0.035] pointer-events-none"
+        className="absolute inset-0 pointer-events-none"
         style={{
-          backgroundImage:
-            "linear-gradient(to right, #ffffff 1px, transparent 1px), linear-gradient(to bottom, #ffffff 1px, transparent 1px)",
+          opacity: isLight ? 0.04 : 0.035,
+          backgroundImage: isLight
+            ? "linear-gradient(to right, #0f172a 1px, transparent 1px), linear-gradient(to bottom, #0f172a 1px, transparent 1px)"
+            : "linear-gradient(to right, #ffffff 1px, transparent 1px), linear-gradient(to bottom, #ffffff 1px, transparent 1px)",
           backgroundSize: "40px 40px",
         }}
       />
@@ -233,11 +317,21 @@ export const ArrayAlgorithm: React.FC<AlgoMotionProps> = ({
         </div>
 
         <div>
-          <h1 className="text-4xl font-black tracking-tight bg-gradient-to-r from-white via-slate-100 to-slate-400 bg-clip-text text-transparent">
+          <h1
+            className={`text-4xl font-black tracking-tight ${
+              isLight
+                ? "text-slate-900"
+                : "bg-gradient-to-r from-white via-slate-100 to-slate-400 bg-clip-text text-transparent"
+            }`}
+          >
             {title}
           </h1>
           {subtitle && (
-            <p className="text-slate-400 text-sm mt-0.5 font-medium">
+            <p
+              className={`text-sm mt-0.5 font-medium ${
+                isLight ? "text-slate-600" : "text-slate-400"
+              }`}
+            >
               {subtitle}
             </p>
           )}
@@ -367,22 +461,33 @@ export const ArrayAlgorithm: React.FC<AlgoMotionProps> = ({
             {/* Primary Data Structure Visualizer (Array, Linked List, or Binary Tree) */}
             {data.algorithm?.includes("linked-list") ? (
               <LinkedListTrack
-                nodes={data.array}
+                nodes={activeArrayValues}
                 pointers={activeStep?.pointers ?? {}}
                 activeIndices={activeIndices}
               />
             ) : data.algorithm?.includes("tree") ? (
               <BinaryTreeView
-                nodes={data.array}
+                nodes={activeArrayValues}
                 pointers={activeStep?.pointers ?? {}}
               />
             ) : (
               <ArrayTrack
-                values={data.array}
+                values={activeArrayValues}
                 pointers={activeStep?.pointers ?? {}}
                 activeIndices={activeIndices}
                 matchIndices={isOutroPhase ? matchIndices : []}
                 label="Input Array State"
+              />
+            )}
+
+            {/* Render Queue if present */}
+            {activeQueueValues !== undefined && (
+              <ArrayTrack
+                values={activeQueueValues}
+                pointers={{}}
+                activeIndices={[]}
+                matchIndices={[]}
+                label="Queue (BFS)"
               />
             )}
 
